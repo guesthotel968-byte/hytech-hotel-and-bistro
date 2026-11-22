@@ -83,11 +83,9 @@ export default function App() {
       setIsBookingOpen(true);
       setPendingBookingRoom(null);
     } 
-    // If user was trying to access admin and is authorized
-    else if (signInMode === 'admin') {
-      if (userData.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        setCurrentView('admin');
-      }
+    // If the admin logged in, automatically take them to Admin Dashboard
+    else if (userData.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+      setCurrentView('admin');
     }
   }
 
