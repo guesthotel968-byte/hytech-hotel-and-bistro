@@ -10,7 +10,7 @@ export default function ContactSection() {
           Contact Us
         </h2>
 
-        {/* Contact Info List */}
+     
         <div className="space-y-4 text-emerald-100 text-sm sm:text-base font-light mb-12">
           <p className="flex items-center justify-center gap-2">
             <span className="font-semibold text-white">Address:</span>
@@ -32,7 +32,7 @@ export default function ContactSection() {
           </p>
         </div>
 
-        {/* Bottom copyright line exactly matching screenshot */}
+        
         <div className="pt-8 border-t border-emerald-800/60 text-xs text-emerald-300/80">
           <p>© 2026 Hytech HOTEL AND BISTRO. All rights reserved.</p>
         </div>

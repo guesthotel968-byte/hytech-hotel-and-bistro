@@ -35,7 +35,7 @@ export default function AdminSidebar({
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      
       {isMobileOpen && (
         <div 
           onClick={() => setIsMobileOpen(false)}
@@ -43,7 +43,7 @@ export default function AdminSidebar({
         />
       )}
 
-      {/* Sidebar Container */}
+   
       <aside className={`
         fixed lg:static top-0 left-0 bottom-0 z-40
         w-64 bg-[#1f3f33] text-white flex flex-col justify-between
@@ -51,7 +51,7 @@ export default function AdminSidebar({
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         border-r border-emerald-900/60 shadow-xl lg:shadow-none
       `}>
-        {/* Header / Brand matching screenshot */}
+        
         <div>
           <div className="p-6 border-b border-emerald-800/60 flex items-center justify-between">
             <div>
@@ -70,7 +70,7 @@ export default function AdminSidebar({
             </button>
           </div>
 
-          {/* Navigation Links */}
+          
           <nav className="p-3 space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -98,7 +98,6 @@ export default function AdminSidebar({
           </nav>
         </div>
 
-        {/* Footer / Switch back to Guest View */}
         <div className="p-4 border-t border-emerald-800/60">
           <button
             onClick={onBackToWebsite}

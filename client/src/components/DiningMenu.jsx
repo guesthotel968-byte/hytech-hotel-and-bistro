@@ -110,7 +110,7 @@ export default function DiningMenu({ currentUser }) {
 
   return (
     <section id="food-and-drink" className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Header */}
+    
       <div className="text-center max-w-3xl mx-auto mb-10">
         <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#142821] mb-3">
           Dining & Beverages
@@ -119,7 +119,7 @@ export default function DiningMenu({ currentUser }) {
           Fresh local seafood, hot breakfast plates, and cold drinks, served at the bistro and on the rooftop deck.
         </p>
 
-        {/* Category Filter Pills */}
+       
         <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
           {categories.map((cat) => {
             const isActive = category === cat;
@@ -140,7 +140,7 @@ export default function DiningMenu({ currentUser }) {
         </div>
       </div>
 
-      {/* Menu Grid */}
+     
       {loading ? (
         <div className="py-20 text-center text-stone-500 text-sm">Loading bistro menu...</div>
       ) : (
@@ -189,7 +189,7 @@ export default function DiningMenu({ currentUser }) {
         </div>
       )}
 
-      {/* Floating Cart Trigger Pill */}
+     
       {cartItemCount > 0 && !isCartOpen && (
         <div className="fixed bottom-6 right-6 z-40">
           <button
@@ -205,7 +205,7 @@ export default function DiningMenu({ currentUser }) {
         </div>
       )}
 
-      {/* Slide-over Cart / Ordering Modal */}
+     
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#fcfbf7] rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-stone-200 flex flex-col max-h-[90vh]">
@@ -223,7 +223,7 @@ export default function DiningMenu({ currentUser }) {
               </button>
             </div>
 
-            {/* Cart Items List */}
+         
             <div className="p-5 overflow-y-auto flex-1 space-y-3">
               {cart.map((c) => (
                 <div key={c.id} className="flex items-center justify-between p-3 rounded-2xl bg-white border border-stone-200">
@@ -259,7 +259,6 @@ export default function DiningMenu({ currentUser }) {
                 </div>
               ))}
 
-              {/* Order Info Form */}
               <form id="bistro-order-form" onSubmit={handleCheckoutOrder} className="pt-4 space-y-3 text-xs">
                 <div>
                   <label className="block font-medium text-stone-700 mb-1">Deliver To:</label>
@@ -317,7 +316,7 @@ export default function DiningMenu({ currentUser }) {
               </form>
             </div>
 
-            {/* Footer */}
+            
             <div className="p-5 border-t border-stone-200 bg-stone-50">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-xs text-stone-600 font-medium">Order Subtotal:</span>
@@ -337,7 +336,7 @@ export default function DiningMenu({ currentUser }) {
         </div>
       )}
 
-      {/* Order Placed Success Confirmation Dialog */}
+      
       {lastPlacedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#fcfbf7] rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-stone-200">

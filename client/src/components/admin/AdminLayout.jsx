@@ -16,7 +16,7 @@ export default function AdminLayout({ currentUser, onBackToWebsite, onRequireSig
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Security Guard: Check if current user is the administrator
+ 
   if (!currentUser || !isUserAdmin(currentUser)) {
     return (
       <div className="min-h-screen bg-[#eaf0ec] flex items-center justify-center p-4">
@@ -58,7 +58,7 @@ export default function AdminLayout({ currentUser, onBackToWebsite, onRequireSig
 
   return (
     <div className="min-h-screen bg-[#eaf0ec] flex">
-      {/* Sidebar */}
+   
       <AdminSidebar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
@@ -67,9 +67,9 @@ export default function AdminLayout({ currentUser, onBackToWebsite, onRequireSig
         setIsMobileOpen={setIsMobileOpen}
       />
 
-      {/* Main Content Area */}
+     
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Mobile Top Header */}
+       
         <div className="lg:hidden bg-[#1f3f33] text-white p-4 flex items-center justify-between shadow">
           <div className="flex items-center gap-3">
             <button
@@ -88,7 +88,7 @@ export default function AdminLayout({ currentUser, onBackToWebsite, onRequireSig
           </button>
         </div>
 
-        {/* Content Body */}
+        
         <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {currentTab === 'dashboard' && <AdminDashboard onNavigateTab={setCurrentTab} />}
           {currentTab === 'calendar' && <AdminCalendar />}

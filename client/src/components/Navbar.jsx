@@ -30,7 +30,6 @@ export default function Navbar({
     onOpenBooking();
   }
 
-  // Check if current user is the administrator
   const isAdmin = currentUser && isUserAdmin(currentUser);
 
   return (
@@ -47,7 +46,7 @@ export default function Navbar({
           </div>
         </a>
 
-        {/* Desktop Navigation */}
+        
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
           {navLinks.map((link) => (
             <a
@@ -60,9 +59,9 @@ export default function Navbar({
           ))}
         </nav>
 
-        {/* Action Buttons */}
+        
         <div className="hidden md:flex items-center space-x-3">
-          {/* Booking Button (Yellow Pill) */}
+         
           <button
             onClick={handleBookingClick}
             className="bg-[#e2a63b] hover:bg-[#d4972f] text-[#142821] font-semibold text-sm px-5 py-2 rounded-full shadow-sm hover:shadow transition-all flex items-center gap-1.5"
@@ -71,7 +70,7 @@ export default function Navbar({
             <span>Booking</span>
           </button>
 
-          {/* User / Sign In Button */}
+        
           {currentUser ? (
             <div className="flex items-center gap-2">
               <button
@@ -106,7 +105,7 @@ export default function Navbar({
             </button>
           )}
 
-          {/* Admin Panel Toggle - STRICTLY PRIVATE: Only renders if logged in as adminhotel968@gmail.com */}
+         
           {isAdmin && (
             <button
               onClick={() => setCurrentView('admin')}
@@ -119,7 +118,7 @@ export default function Navbar({
           )}
         </div>
 
-        {/* Mobile menu button */}
+     
         <div className="flex md:hidden items-center gap-2">
           <button
             onClick={handleBookingClick}
@@ -136,7 +135,7 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* Mobile menu dropdown */}
+     
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#1f3b31] border-b border-emerald-800 px-4 pt-2 pb-6 space-y-2">
           {navLinks.map((link) => (
@@ -167,7 +166,7 @@ export default function Navbar({
               </button>
             )}
 
-            {/* Private Admin option on mobile */}
+            
             {isAdmin && (
               <button
                 onClick={() => { setCurrentView('admin'); setMobileMenuOpen(false); }}

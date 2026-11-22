@@ -9,7 +9,7 @@ export default function AdminKeyManagement() {
   const [statusFilter, setStatusFilter] = useState('All statuses');
   const [loading, setLoading] = useState(true);
 
-  // Add / Assign key modal
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
   const [newRoomNumber, setNewRoomNumber] = useState('Room 101');
@@ -109,15 +109,15 @@ export default function AdminKeyManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Top Title Pill */}
+      
       <div className="bg-[#dce7de] p-4 rounded-2xl border border-emerald-900/10">
         <h2 className="font-serif text-2xl font-bold text-[#142821]">Keys</h2>
       </div>
 
-      {/* Main Container */}
+     
       <div className="space-y-6">
         
-        {/* Banner matching screenshot */}
+        
         <div className="p-6 sm:p-8 rounded-3xl bg-[#294c3f] text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
           <div>
             <span className="text-[10px] uppercase tracking-widest text-emerald-200 font-semibold">
@@ -141,7 +141,6 @@ export default function AdminKeyManagement() {
           </button>
         </div>
 
-        {/* 4 Counter Stat Cards matching screenshot */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-5 rounded-2xl bg-white border border-stone-200 text-center">
             <span className="text-xs text-stone-500 font-medium">Total keys</span>
@@ -173,7 +172,7 @@ export default function AdminKeyManagement() {
           </div>
         </div>
 
-        {/* Search & Status Filter row matching screenshot */}
+       
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-stone-400" />
@@ -198,7 +197,7 @@ export default function AdminKeyManagement() {
           </select>
         </div>
 
-        {/* Keys Cards Grid */}
+       
         {loading ? (
           <div className="py-12 text-center text-stone-400 text-xs">Loading keys...</div>
         ) : keys.length === 0 ? (
@@ -266,7 +265,7 @@ export default function AdminKeyManagement() {
                     )}
                   </div>
 
-                  {/* Actions */}
+                  
                   <div className="mt-5 pt-3 border-t border-stone-200 flex gap-2">
                     {isAvailable && (
                       <button
@@ -316,7 +315,7 @@ export default function AdminKeyManagement() {
         )}
       </div>
 
-      {/* Add Key Modal */}
+     
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#fcfbf7] rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-200 animate-in fade-in duration-200">
@@ -376,7 +375,7 @@ export default function AdminKeyManagement() {
         </div>
       )}
 
-      {/* Assign Key Modal */}
+    
       {assigningKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#fcfbf7] rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-200 animate-in fade-in duration-200">

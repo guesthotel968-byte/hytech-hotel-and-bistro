@@ -26,44 +26,20 @@ export default function HotelInfo() {
   ];
 
   return (
-    <section id="the-hotel" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Background Showcase Banner with the user's second photo */}
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-emerald-900/20 mb-12">
-        {/* Actual photo of Bongabong View building */}
-        <div className="relative min-h-[460px] md:min-h-[520px] flex items-center">
-          <img
-            src="/images/hotel-info-building.jpg"
-            alt="Hytech Hotel & Bistro Building"
-            className="absolute inset-0 w-full h-full object-cover object-center"
-          />
-          {/* Elegant Dark Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#11241d]/95 via-[#11241d]/85 to-black/40" />
-
-          {/* Text Content over Image */}
-          <div className="relative z-10 max-w-2xl p-8 sm:p-12 md:p-16 text-white">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-amber-300 text-xs font-semibold uppercase tracking-wider mb-4">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Bongabong, Oriental Mindoro</span>
-            </div>
-
-            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 text-white">
-              A Peaceful Sanctuary in the Heart of Town
-            </h2>
-
-            <p className="text-emerald-100/90 text-sm sm:text-base leading-relaxed mb-6 font-light">
-              Hytech Hotel & Bistro (Bongabong View) combines contemporary comforts with genuine Filipino hospitality. Whether visiting for business, a peaceful getaway, or social gatherings, enjoy clean, air-conditioned rooms, delicious bistro dining, and friendly service tailored to your stay.
-            </p>
-
-            <div className="flex flex-wrap gap-4 text-xs sm:text-sm font-medium text-emerald-200">
-              <span className="flex items-center gap-1.5">✓ 11 Room Types</span>
-              <span className="flex items-center gap-1.5">✓ Restaurant & Events Place</span>
-              <span className="flex items-center gap-1.5">✓ Secure Parking</span>
-            </div>
-          </div>
+    <section id="the-hotel" className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="text-center max-w-2xl mx-auto mb-12">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#18392e]/10 text-[#18392e] text-xs font-semibold uppercase tracking-wider mb-3">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <span>Bongabong, Oriental Mindoro</span>
         </div>
+        <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#142821] mb-3">
+          Why Choose Hytech Hotel & Bistro
+        </h2>
+        <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
+          Combining contemporary comforts with genuine Filipino hospitality. Clean rooms, delicious bistro dining, and attentive service for every traveler.
+        </p>
       </div>
 
-      {/* Feature Highlights Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {highlights.map((item, idx) => (
           <div

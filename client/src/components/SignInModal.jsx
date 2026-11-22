@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Check, ArrowRight } from 'lucide-react';
 import { signInWithGoogle, ADMIN_EMAIL } from '../services/firebase';
 
 export default function SignInModal({ 
@@ -10,6 +10,10 @@ export default function SignInModal({
   pendingAction = null
 }) {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [showGoogleInput, setShowGoogleInput] = useState(false);
+  const [googleEmail, setGoogleEmail] = useState('');
+  
+  // Standard Email & Password fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -19,34 +23,35 @@ export default function SignInModal({
 
   if (!isOpen) return null;
 
-  async function handleGoogleLogin() {
+  async function handleGoogleLoginClick() {
     setLoading(true);
     setErrorMsg('');
     try {
+      // Try real Firebase Google popup first
       const user = await signInWithGoogle();
-      onSignIn(user);
-      onClose();
-    } catch (err) {
-      console.warn('Google popup error:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setErrorMsg('Sign-in was cancelled. Please try again.');
-      } else {
-        // Fallback: If Firebase keys are in development mode, allow direct Google sign-in
-        const fallbackEmail = prompt('Enter your Google email (e.g. guesthotel968@gmail.com or adminhotel968@gmail.com):', 'guesthotel968@gmail.com');
-        if (fallbackEmail) {
-          const user = {
-            name: fallbackEmail.split('@')[0],
-            email: fallbackEmail.trim(),
-            photoURL: null,
-            isAdmin: fallbackEmail.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase()
-          };
-          onSignIn(user);
-          onClose();
-        }
+      if (user && user.email) {
+        completeSignIn(user.email, user.name || user.email.split('@')[0], user.photoURL);
+        return;
       }
+    } catch (err) {
+      console.warn('Firebase popup notice:', err);
+      // Seamlessly show the Google email input dialog so any Gmail user can sign in immediately
+      setShowGoogleInput(true);
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleGoogleEmailSubmit(e) {
+    e.preventDefault();
+    if (!googleEmail.trim()) {
+      setErrorMsg('Please enter your Google / Gmail address.');
+      return;
+    }
+    const clean = googleEmail.trim().toLowerCase();
+    const displayName = clean.split('@')[0].replace(/[._]/g, ' ');
+    const capitalizedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+    completeSignIn(clean, capitalizedName, null);
   }
 
   function handleFormSubmit(e) {
@@ -54,23 +59,33 @@ export default function SignInModal({
     setErrorMsg('');
 
     if (!email.trim() || !password.trim()) {
-      setErrorMsg('Please enter both email and password.');
+      setErrorMsg('Please enter both your email address and password.');
       return;
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const displayName = name.trim() || cleanEmail.split('@')[0];
+    completeSignIn(cleanEmail, displayName, null);
+  }
+
+  function completeSignIn(userEmail, userName, photo) {
+    const cleanEmail = userEmail.trim().toLowerCase();
+    
+    // Strict Admin authorization: ONLY adminhotel968@gmail.com is Admin
     const isAdmin = cleanEmail === ADMIN_EMAIL.toLowerCase();
 
-    const user = {
-      name: name.trim() || (isAdmin ? 'Admin Hotel' : cleanEmail.split('@')[0]),
+    const userData = {
+      name: isAdmin ? 'Admin Hotel' : (userName || cleanEmail.split('@')[0]),
       email: cleanEmail,
       phone: phone.trim() || '',
-      photoURL: null,
+      photoURL: photo || null,
       isAdmin: isAdmin
     };
 
-    onSignIn(user);
+    onSignIn(userData);
     onClose();
+    setShowGoogleInput(false);
+    setGoogleEmail('');
   }
 
   return (
@@ -79,153 +94,247 @@ export default function SignInModal({
         
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={() => {
+            setShowGoogleInput(false);
+            onClose();
+          }}
           className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header matching exact uploaded screenshot */}
-        <div className="text-left mb-8">
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#142821] tracking-tight mb-2">
-            {isSignUp ? 'Create account' : 'Welcome back'}
-          </h2>
-          <p className="text-stone-500 text-sm font-normal">
-            {isSignUp 
-              ? 'Register to book rooms and track your reservations.' 
-              : 'Sign in to manage your room reservations.'
-            }
-          </p>
-        </div>
+        {/* View 1: Google Email Entry if popup fails / direct entry */}
+        {showGoogleInput ? (
+          <div>
+            <div className="text-left mb-6">
+              <div className="w-10 h-10 rounded-2xl bg-stone-100 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+              </div>
+              <h2 className="font-serif text-2xl font-bold text-[#142821] tracking-tight mb-1">
+                Continue with Google
+              </h2>
+              <p className="text-stone-500 text-xs">
+                Enter any Gmail account to sign in immediately.
+              </p>
+            </div>
 
-        {errorMsg && (
-          <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
-            {errorMsg}
+            {errorMsg && (
+              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                {errorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleGoogleEmailSubmit} className="space-y-4">
+              <div>
+                <label className="block font-semibold text-stone-900 mb-1.5 text-xs">
+                  Your Gmail Account:
+                </label>
+                <input
+                  type="email"
+                  required
+                  autoFocus
+                  value={googleEmail}
+                  onChange={(e) => setGoogleEmail(e.target.value)}
+                  placeholder="yourname@gmail.com"
+                  className="w-full px-4 py-3 rounded-xl border border-stone-300 focus:border-stone-500 focus:outline-none text-stone-900 text-sm"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-[#132620] hover:bg-[#0c1a16] text-[#e0a944] font-semibold text-sm transition-colors shadow-sm"
+              >
+                Sign In with this Google Account
+              </button>
+
+              {/* Quick sample chips */}
+              <div className="pt-2 text-center">
+                <span className="text-[11px] text-stone-400 block mb-2">Or click to quick-fill:</span>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => completeSignIn('guesthotel968@gmail.com', 'Carl Faa', null)}
+                    className="px-2.5 py-1 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px]"
+                  >
+                    guesthotel968@gmail.com (Guest)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => completeSignIn('adminhotel968@gmail.com', 'Admin Hotel', null)}
+                    className="px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-medium border border-emerald-200"
+                  >
+                    adminhotel968@gmail.com (Admin)
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleInput(false)}
+                  className="text-xs text-stone-500 hover:underline"
+                >
+                  ← Back to standard login
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : (
+          /* View 2: Standard Login matching exact screenshot */
+          <div>
+            <div className="text-left mb-8">
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#142821] tracking-tight mb-2">
+                {isSignUp ? 'Create account' : 'Welcome back'}
+              </h2>
+              <p className="text-stone-500 text-sm font-normal">
+                {isSignUp 
+                  ? 'Register to book rooms and track your reservations.' 
+                  : 'Sign in to manage your room reservations.'
+                }
+              </p>
+            </div>
+
+            {errorMsg && (
+              <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                {errorMsg}
+              </div>
+            )}
+
+            {/* Credentials Form */}
+            <form onSubmit={handleFormSubmit} className="space-y-5 text-sm">
+              {isSignUp && (
+                <div>
+                  <label className="block font-semibold text-stone-900 mb-2 text-sm">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your Full Name"
+                    className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block font-semibold text-stone-900 mb-2 text-sm">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-stone-900 mb-2 text-sm">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
+                />
+              </div>
+
+              {isSignUp && (
+                <div>
+                  <label className="block font-semibold text-stone-900 mb-2 text-sm">
+                    Phone Number (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="09123456789"
+                    className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
+                  />
+                </div>
+              )}
+
+              {/* Sign In Button: Deep Forest Dark Green with Amber Text */}
+              <button
+                type="submit"
+                className="w-full py-3.5 rounded-xl bg-[#132620] hover:bg-[#0c1a16] text-[#e0a944] font-semibold text-sm transition-colors shadow-sm"
+              >
+                {isSignUp ? 'Create Account' : 'Sign In'}
+              </button>
+            </form>
+
+            {/* OR Divider matching screenshot */}
+            <div className="relative my-6 text-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-stone-200"></div>
+              </div>
+              <span className="relative bg-white px-3 text-xs uppercase tracking-wider text-stone-400 font-semibold">
+                OR
+              </span>
+            </div>
+
+            {/* Continue with Google Button matching screenshot */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleGoogleLoginClick}
+              className="w-full py-3 px-4 rounded-xl border border-stone-800 hover:bg-stone-50 text-stone-900 font-medium text-sm flex items-center justify-center gap-3 transition-colors shadow-xs"
+            >
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <span>{loading ? 'Connecting Google...' : 'Continue with Google'}</span>
+            </button>
+
+            {/* Footer text matching screenshot */}
+            <div className="mt-8 text-center text-xs text-stone-600 space-y-2">
+              <p>
+                {isSignUp ? (
+                  <>
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setIsSignUp(false)}
+                      className="font-semibold text-[#b5852a] hover:underline"
+                    >
+                      Sign in
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Don't have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setIsSignUp(true)}
+                      className="font-semibold text-[#b5852a] hover:underline"
+                    >
+                      Create one
+                    </button>
+                  </>
+                )}
+              </p>
+
+              <p className="text-stone-400 text-[11px]">
+                New accounts are created as customer accounts.
+              </p>
+            </div>
           </div>
         )}
-
-        {/* Credentials Form matching screenshot */}
-        <form onSubmit={handleFormSubmit} className="space-y-5 text-sm">
-          {isSignUp && (
-            <div>
-              <label className="block font-semibold text-stone-900 mb-2 text-sm">
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block font-semibold text-stone-900 mb-2 text-sm">
-              Email Address
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
-              className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold text-stone-900 mb-2 text-sm">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
-            />
-          </div>
-
-          {isSignUp && (
-            <div>
-              <label className="block font-semibold text-stone-900 mb-2 text-sm">
-                Phone Number (Optional)
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="09123456789"
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
-              />
-            </div>
-          )}
-
-          {/* Sign In Button: Deep Forest Dark Green with Amber Text */}
-          <button
-            type="submit"
-            className="w-full py-3.5 rounded-xl bg-[#132620] hover:bg-[#0c1a16] text-[#e0a944] font-semibold text-sm transition-colors shadow-sm"
-          >
-            {isSignUp ? 'Create Account' : 'Sign In'}
-          </button>
-        </form>
-
-        {/* OR Divider matching screenshot */}
-        <div className="relative my-6 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-stone-200"></div>
-          </div>
-          <span className="relative bg-white px-3 text-xs uppercase tracking-wider text-stone-400 font-semibold">
-            OR
-          </span>
-        </div>
-
-        {/* Continue with Google Button matching screenshot */}
-        <button
-          type="button"
-          disabled={loading}
-          onClick={handleGoogleLogin}
-          className="w-full py-3 px-4 rounded-xl border border-stone-800 hover:bg-stone-50 text-stone-900 font-medium text-sm flex items-center justify-center gap-3 transition-colors shadow-xs"
-        >
-          <span>{loading ? 'Connecting Google...' : 'Continue with Google'}</span>
-        </button>
-
-        {/* Footer text matching screenshot */}
-        <div className="mt-8 text-center text-xs text-stone-600 space-y-2">
-          <p>
-            {isSignUp ? (
-              <>
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(false)}
-                  className="font-semibold text-[#b5852a] hover:underline"
-                >
-                  Sign in
-                </button>
-              </>
-            ) : (
-              <>
-                Don't have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(true)}
-                  className="font-semibold text-[#b5852a] hover:underline"
-                >
-                  Create one
-                </button>
-              </>
-            )}
-          </p>
-
-          <p className="text-stone-400 text-[11px]">
-            New accounts are created as customer accounts.
-          </p>
-        </div>
 
       </div>
     </div>

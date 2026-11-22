@@ -174,7 +174,7 @@ export default function ReservationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
       <div className="bg-[#fcfbf7] rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-stone-200 my-auto animate-in fade-in duration-200">
         
-        {/* Header */}
+        
         <div className="p-6 border-b border-stone-200/80 relative text-center">
           <button
             onClick={onClose}
@@ -190,7 +190,7 @@ export default function ReservationModal({
             Select your rooms, add your details, and confirm your stay.
           </p>
 
-          {/* Stepper Navigation */}
+          
           <div className="flex items-center justify-center gap-4 sm:gap-6 mt-6">
             {[
               { num: 1, label: 'Rooms' },
@@ -222,7 +222,6 @@ export default function ReservationModal({
           </div>
         </div>
 
-        {/* Modal Body: STEP 1: ROOMS */}
         {step === 1 && (
           <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
             <div className="flex items-center justify-between">
@@ -304,7 +303,7 @@ export default function ReservationModal({
           </div>
         )}
 
-        {/* Modal Body: STEP 2: YOUR STAY */}
+        
         {step === 2 && (
           <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
             <div>
@@ -382,7 +381,7 @@ export default function ReservationModal({
           </div>
         )}
 
-        {/* Modal Body: STEP 3: EXTRAS */}
+       
         {step === 3 && (
           <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
             <div>
@@ -448,7 +447,7 @@ export default function ReservationModal({
           </div>
         )}
 
-        {/* Modal Body: STEP 4: PAYMENT */}
+      
         {step === 4 && (
           <div className="p-6 max-h-[60vh] overflow-y-auto space-y-5">
             {/* Summary Box */}
@@ -478,7 +477,7 @@ export default function ReservationModal({
               </div>
             </div>
 
-            {/* Voucher Promo Input */}
+           
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Tag className="w-3.5 h-3.5 absolute left-3 top-3 text-stone-400" />
@@ -531,7 +530,7 @@ export default function ReservationModal({
               </div>
             </div>
 
-            {/* GCash instructions matching screenshot */}
+            
             {paymentMethod === 'GCash' && (
               <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs text-stone-800 space-y-3">
                 <p className="leading-relaxed">
@@ -554,7 +553,7 @@ export default function ReservationModal({
           </div>
         )}
 
-        {/* Modal Footer Controls */}
+       
         <div className="p-6 border-t border-stone-200 bg-stone-50 flex items-center justify-between">
           <div>
             <div className="text-xs text-stone-500">

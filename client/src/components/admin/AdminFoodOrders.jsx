@@ -9,7 +9,7 @@ export default function AdminFoodOrders() {
   useEffect(() => {
     fetchOrders();
 
-    // Auto-refresh every 20 seconds exactly as stated in the UI
+    // Auto-refresh to sha every 20 seconds 
     const interval = setInterval(() => {
       fetchOrders(true);
     }, 20000);
@@ -66,7 +66,7 @@ export default function AdminFoodOrders() {
           </button>
         </div>
 
-        {/* Orders Table matching screenshot */}
+       
         <div className="overflow-x-auto rounded-2xl border border-stone-200">
           <table className="w-full text-left text-xs min-w-[750px]">
             <thead className="bg-[#24483b] text-white text-[11px] font-semibold tracking-wider">
@@ -91,18 +91,18 @@ export default function AdminFoodOrders() {
               ) : (
                 orders.map((order) => (
                   <tr key={order.id} className="hover:bg-stone-50/80 transition-colors">
-                    {/* Order ID */}
+                   
                     <td className="py-4 px-4 font-mono font-bold text-stone-900">
                       {order.order_id}
                     </td>
 
-                    {/* Guest */}
+                   
                     <td className="py-4 px-4">
                       <div className="font-semibold text-stone-900">{order.guest_name}</div>
                       <div className="text-stone-500 text-[11px]">{order.guest_phone}</div>
                     </td>
 
-                    {/* Items */}
+                   
                     <td className="py-4 px-4">
                       <div className="space-y-2">
                         {order.items?.map((it, idx) => (
@@ -129,17 +129,17 @@ export default function AdminFoodOrders() {
                       </div>
                     </td>
 
-                    {/* Deliver to */}
+                    
                     <td className="py-4 px-4 font-semibold text-emerald-950">
                       {order.deliver_to}
                     </td>
 
-                    {/* Total */}
+                    
                     <td className="py-4 px-4 font-bold text-[#b83824] text-sm">
                       ₱{order.total_amount}
                     </td>
 
-                    {/* Status Dropdown matching screenshot */}
+                   
                     <td className="py-4 px-4">
                       <select
                         value={order.status}

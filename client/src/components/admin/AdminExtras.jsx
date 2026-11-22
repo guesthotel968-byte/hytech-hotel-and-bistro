@@ -99,15 +99,15 @@ export default function AdminExtras() {
 
   return (
     <div className="space-y-6">
-      {/* Top Title Pill */}
+     
       <div className="bg-[#dce7de] p-4 rounded-2xl border border-emerald-900/10">
         <h2 className="font-serif text-2xl font-bold text-[#142821]">Extras</h2>
       </div>
 
-      {/* Main Container matching screenshot */}
+      
       <div className="bg-white rounded-3xl border border-stone-200/80 p-6 sm:p-8 shadow-sm space-y-6">
         
-        {/* Header */}
+       
         <div className="text-center max-w-xl mx-auto">
           <span className="text-[10px] uppercase tracking-widest text-emerald-800 font-bold">
             The Little Details
@@ -120,7 +120,6 @@ export default function AdminExtras() {
           </p>
         </div>
 
-        {/* Action Button */}
         <div>
           <button
             onClick={handleOpenAdd}
@@ -131,7 +130,7 @@ export default function AdminExtras() {
           </button>
         </div>
 
-        {/* Info Card matching screenshot */}
+       
         <div className="p-6 rounded-2xl bg-[#fcfbf7] border border-stone-200 text-center max-w-2xl mx-auto space-y-2">
           <h4 className="font-serif font-bold text-sm text-stone-900">How guests use extras</h4>
           <p className="text-xs text-stone-600 leading-relaxed">
@@ -139,7 +138,7 @@ export default function AdminExtras() {
           </p>
         </div>
 
-        {/* Extras Services List */}
+        
         {loading ? (
           <div className="py-12 text-center text-stone-400 text-xs">Loading extras & services...</div>
         ) : (
@@ -200,7 +199,7 @@ export default function AdminExtras() {
 
       </div>
 
-      {/* Add / Edit Extra Modal */}
+     
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#fcfbf7] rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-stone-200 animate-in fade-in duration-200">

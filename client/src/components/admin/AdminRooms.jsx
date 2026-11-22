@@ -78,7 +78,7 @@ export default function AdminRooms() {
 
   return (
     <div className="space-y-6">
-      {/* Top Title Pill */}
+      
       <div className="bg-[#dce7de] p-4 rounded-2xl border border-emerald-900/10 flex justify-between items-center">
         <h2 className="font-serif text-2xl font-bold text-[#142821]">Rooms</h2>
         <button
@@ -102,7 +102,7 @@ export default function AdminRooms() {
         </button>
       </div>
 
-      {/* Main Container matching screenshot */}
+     
       <div className="bg-white rounded-3xl border border-stone-200/80 p-6 sm:p-8 shadow-sm space-y-6">
         <div className="text-center mb-4">
           <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#142821]">Room Management</h3>
@@ -111,7 +111,6 @@ export default function AdminRooms() {
           </p>
         </div>
 
-        {/* Room Cards Grid matching screenshot */}
         {loading ? (
           <div className="py-12 text-center text-stone-400 text-xs">Loading rooms configuration...</div>
         ) : (
@@ -162,7 +161,7 @@ export default function AdminRooms() {
         )}
       </div>
 
-      {/* Edit / Add Room Modal */}
+      
       {(editingRoom || isAddModalOpen) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#fcfbf7] rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-stone-200 animate-in fade-in duration-200">

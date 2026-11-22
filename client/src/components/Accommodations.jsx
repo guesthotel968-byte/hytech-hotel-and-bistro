@@ -28,7 +28,7 @@ export default function Accommodations({ onSelectRoomForBooking }) {
 
   return (
     <section id="our-rooms" className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Header */}
+     
       <div className="text-center max-w-3xl mx-auto mb-10">
         <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1a382e] mb-3">
           Our Accommodations
@@ -37,7 +37,7 @@ export default function Accommodations({ onSelectRoomForBooking }) {
           11 room types for solo travelers, couples, families, and groups.
         </p>
 
-        {/* Filter Pills */}
+       
         <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
           {filterOptions.map((opt) => {
             const isActive = selectedFilter === opt;
@@ -58,7 +58,7 @@ export default function Accommodations({ onSelectRoomForBooking }) {
         </div>
       </div>
 
-      {/* Room Grid */}
+      
       {loading ? (
         <div className="py-20 text-center text-stone-500 text-sm">Loading available rooms...</div>
       ) : (
@@ -68,7 +68,7 @@ export default function Accommodations({ onSelectRoomForBooking }) {
               key={room.id}
               className="bg-[#fcfbf7] rounded-3xl overflow-hidden border border-emerald-950/10 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col"
             >
-              {/* Image & Category Badge */}
+             
               <div className="relative h-56 w-full overflow-hidden bg-stone-200">
                 <img
                   src={room.image_url || 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'}
@@ -80,7 +80,7 @@ export default function Accommodations({ onSelectRoomForBooking }) {
                 </span>
               </div>
 
-              {/* Card Body */}
+              
               <div className="p-6 flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#142821] mb-1">
@@ -107,7 +107,7 @@ export default function Accommodations({ onSelectRoomForBooking }) {
                   </p>
                 </div>
 
-                {/* Footer links and Reserve button */}
+                
                 <div className="pt-3 border-t border-stone-200/60 flex items-center justify-between">
                   <button
                     onClick={() => setActiveModalRoom(room)}
@@ -129,7 +129,7 @@ export default function Accommodations({ onSelectRoomForBooking }) {
         </div>
       )}
 
-      {/* Room Details Modal */}
+     
       {activeModalRoom && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#fcfbf7] rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-stone-200 animate-in fade-in duration-200">
