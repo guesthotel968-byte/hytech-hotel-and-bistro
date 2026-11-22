@@ -129,13 +129,7 @@ export default function App() {
                 setIsMyBookingsOpen(true);
               }
             }}
-            onOpenProfile={() => {
-              if (!currentUser) {
-                handleRequireSignIn('general');
-              } else {
-                setIsProfileOpen(true);
-              }
-            }}
+            onOpenProfile={() => setIsProfileOpen(true)}
             onSignOut={handleSignOut}
           />
 
@@ -188,7 +182,7 @@ export default function App() {
         }}
       />
 
-      {/* Guest Profile & Avatar Modal (Requirement 9) */}
+      {/* Guest Profile & Avatar Modal (Exact match of media_1795330161323_42be1c7e.png) */}
       <ProfileModal
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
@@ -197,6 +191,10 @@ export default function App() {
           setCurrentUser(updated);
           localStorage.setItem('hytech_user', JSON.stringify(updated));
         }}
+        onOpenSignIn={() => handleRequireSignIn('general')}
+        onOpenMyBookings={() => setIsMyBookingsOpen(true)}
+        onSignOut={handleSignOut}
+        onOpenAdmin={() => setCurrentView('admin')}
       />
 
       {/* Google Sign In Modal */}

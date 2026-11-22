@@ -35,10 +35,25 @@ export default function MyBookingsModal({
     setLoading(true);
     try {
       const res = await api.getMyBookings(email);
-      setBookings(res.bookings || []);
+      let loadedBookings = res.bookings || [];
+      // Seamlessly merge with local storage cache
+      try {
+        const stored = JSON.parse(localStorage.getItem('hytech_my_bookings') || '[]');
+        const existingRefs = new Set(loadedBookings.map(b => b.reference_id));
+        const missing = stored.filter(b => b && b.reference_id && !existingRefs.has(b.reference_id) && b.email?.toLowerCase() === email.toLowerCase());
+        if (missing.length > 0) {
+          loadedBookings = [...missing, ...loadedBookings];
+        }
+      } catch (e) {}
+      setBookings(loadedBookings);
       setOrders(res.orders || []);
     } catch (err) {
       console.error('Failed to load my bookings:', err);
+      try {
+        const stored = JSON.parse(localStorage.getItem('hytech_my_bookings') || '[]');
+        const matching = stored.filter(b => b && b.email?.toLowerCase() === email.toLowerCase());
+        setBookings(matching);
+      } catch (e) {}
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Menu, X, User, ShieldCheck, Calendar, BookOpen, UserCog } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, X, Calendar, BookOpen, ShieldCheck, ChevronDown } from 'lucide-react';
 import { isUserAdmin } from '../services/firebase';
 
 export default function Navbar({ 
@@ -13,15 +13,36 @@ export default function Navbar({
   onSignOut 
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('food-and-drink');
 
   const navLinks = [
-    { name: 'Home', href: '#home' },
-    { name: 'The Hotel', href: '#the-hotel' },
-    { name: 'Our Rooms', href: '#our-rooms' },
-    { name: 'Food & Drink', href: '#food-and-drink' },
-    { name: 'Reviews', href: '#reviews' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'Home', href: '#home', id: 'home' },
+    { name: 'The Hotel', href: '#the-hotel', id: 'the-hotel' },
+    { name: 'Our Rooms', href: '#our-rooms', id: 'our-rooms' },
+    { name: 'Food & Drink', href: '#food-and-drink', id: 'food-and-drink' },
+    { name: 'Reviews', href: '#reviews', id: 'reviews' },
+    { name: 'Contact', href: '#contact', id: 'contact' },
   ];
+
+  // Detect scroll position to highlight active link
+  useEffect(() => {
+    function handleScroll() {
+      const scrollPosition = window.scrollY + 200;
+      for (const link of navLinks) {
+        const el = document.getElementById(link.id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(link.id);
+            break;
+          }
+        }
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   function handleBookingClick() {
     if (!currentUser) {
@@ -32,208 +53,174 @@ export default function Navbar({
   }
 
   const isAdmin = currentUser && isUserAdmin(currentUser);
+  const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : (currentUser?.email ? currentUser.email.charAt(0).toUpperCase() : 'G');
 
   return (
-    <header className="sticky top-0 z-40 bg-[#26483c]/95 backdrop-blur-md border-b border-emerald-900/40 text-white shadow-sm w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Brand Logo */}
-        <a href="#home" className="flex items-center gap-3 group shrink-0">
-          <div className="w-10 h-10 rounded-xl border border-white/30 flex items-center justify-center font-serif text-xl font-bold bg-white/10 group-hover:border-amber-400 group-hover:text-amber-400 transition-colors">
+    <header className="sticky top-2 sm:top-4 z-40 w-full px-3 sm:px-6 pointer-events-none">
+      <div className="max-w-6xl mx-auto bg-[#17372c]/95 backdrop-blur-md rounded-full shadow-xl border border-emerald-800/60 px-4 sm:px-6 py-2.5 flex items-center justify-between pointer-events-auto transition-all">
+        
+        {/* Brand Logo - Matches screenshot with arched "H" icon */}
+        <a href="#home" className="flex items-center gap-2.5 group shrink-0">
+          <div className="w-8 h-9 border border-[#dfc38c] rounded-t-full rounded-b-xs flex items-center justify-center font-serif text-sm sm:text-base font-bold text-[#dfc38c] bg-[#142f25] group-hover:bg-[#1a3d30] transition-colors shadow-xs">
             H
           </div>
           <div className="flex flex-col">
-            <span className="font-serif text-lg sm:text-xl font-semibold tracking-wide">Hytech</span>
-            <span className="text-[10px] tracking-widest uppercase text-emerald-200/80 -mt-1 font-sans">Hotel & Bistro</span>
+            <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-white leading-none">
+              Hytech
+            </span>
+            <span className="text-[8px] sm:text-[9px] font-sans font-bold tracking-[0.18em] uppercase text-[#dfc38c] mt-0.5">
+              HOTEL & BISTRO
+            </span>
           </div>
         </a>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center space-x-1">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              className="px-3 py-1.5 rounded-full text-xs xl:text-sm font-medium text-emerald-100 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              {link.name}
-            </a>
-          ))}
-        </nav>
+        {/* Center Pill - Exactly matches media_1795330097203_4d84e360.png */}
+        <nav className="hidden lg:flex items-center bg-[#22483b]/90 border border-emerald-700/50 rounded-full px-2 py-1 gap-1 shadow-inner">
+          {navLinks.map((link) => {
+            const isActive = activeSection === link.id;
+            return (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={() => setActiveSection(link.id)}
+                className={`text-xs font-medium px-3.5 py-1.5 rounded-full transition-all ${
+                  isActive
+                    ? 'bg-[#2f5d4c] text-white shadow-xs font-semibold'
+                    : 'text-emerald-100/90 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {link.name}
+              </a>
+            );
+          })}
 
-        {/* Desktop Action Buttons */}
-        <div className="hidden md:flex items-center space-x-2.5">
+          {/* Booking Pill Button (Gold capsule inside center pill!) */}
           <button
             onClick={handleBookingClick}
-            className="bg-[#e2a63b] hover:bg-[#d4972f] text-[#142821] font-semibold text-xs lg:text-sm px-4 lg:px-5 py-2 rounded-full shadow-sm hover:shadow transition-all flex items-center gap-1.5"
-          >
-            <Calendar className="w-3.5 h-3.5" />
-            <span>Booking</span>
-          </button>
-
-          {currentUser ? (
-            <div className="flex items-center gap-2">
-              {/* My Bookings */}
-              <button
-                onClick={onOpenMyBookings}
-                className="border border-white/30 hover:border-white/70 bg-white/5 hover:bg-white/10 text-white text-xs px-3 py-2 rounded-full transition-colors flex items-center gap-1.5"
-                title="View booking history"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-amber-300" />
-                <span>My Bookings</span>
-              </button>
-
-              {/* Profile Button */}
-              <button
-                onClick={onOpenProfile}
-                className="border border-white/30 hover:border-amber-400/80 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5"
-                title="Edit My Profile"
-              >
-                {currentUser.photoURL ? (
-                  <img src={currentUser.photoURL} alt="" className="w-5 h-5 rounded-full object-cover border border-white/40" />
-                ) : (
-                  <User className="w-4 h-4 text-amber-300" />
-                )}
-                <span className="max-w-[90px] lg:max-w-[120px] truncate">{currentUser.name || currentUser.email?.split('@')[0]}</span>
-              </button>
-
-              <button
-                onClick={onSignOut}
-                className="text-xs text-emerald-300 hover:text-white underline px-1"
-                title="Sign out"
-              >
-                Sign out
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => onRequireSignIn('general')}
-              className="border border-white/40 hover:border-white/80 text-white text-xs lg:text-sm px-4 py-2 rounded-full hover:bg-white/10 transition-colors flex items-center gap-1.5"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Sign in</span>
-            </button>
-          )}
-
-          {isAdmin && (
-            <button
-              onClick={() => setCurrentView('admin')}
-              className="bg-emerald-950/90 hover:bg-emerald-900 border border-amber-400 text-amber-300 font-bold text-xs px-3.5 py-2 rounded-full transition-colors flex items-center gap-1.5 shadow"
-              title="Admin Dashboard (adminhotel968@gmail.com)"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
-              <span>Admin Panel</span>
-            </button>
-          )}
-        </div>
-
-        {/* Mobile Hamburger & Quick Action */}
-        <div className="flex md:hidden items-center gap-2">
-          <button
-            onClick={handleBookingClick}
-            className="bg-[#e2a63b] text-[#142821] font-semibold text-xs px-3 py-1.5 rounded-full shadow-sm"
+            className="bg-[#d8be8d] hover:bg-[#cbb07e] text-[#142821] font-semibold text-xs px-4 py-1.5 rounded-full shadow-sm hover:shadow transition-all ml-1.5 cursor-pointer"
           >
             Booking
           </button>
+        </nav>
+
+        {/* Right Side: Profile Pill Button matching media_1795330097203_4d84e360.png */}
+        <div className="flex items-center gap-2">
+          {/* Mobile Booking button shortcut */}
+          <button
+            onClick={handleBookingClick}
+            className="lg:hidden bg-[#d8be8d] hover:bg-[#cbb07e] text-[#142821] font-semibold text-xs px-3.5 py-1.5 rounded-full shadow-sm"
+          >
+            Booking
+          </button>
+
+          {/* Profile Capsule Button */}
+          <button
+            onClick={onOpenProfile}
+            className="border border-emerald-700/60 bg-[#22483b]/80 hover:bg-[#22483b] text-white rounded-full px-3 py-1.5 flex items-center gap-2 transition-all cursor-pointer shadow-xs"
+            title="View Profile"
+          >
+            {currentUser?.photoURL ? (
+              <img 
+                src={currentUser.photoURL} 
+                alt="" 
+                className="w-5 h-5 rounded-full object-cover border border-white/40" 
+              />
+            ) : (
+              <div className="w-5 h-5 rounded-full bg-[#8c4b3e] text-white text-[11px] font-bold flex items-center justify-center shrink-0">
+                {userInitial}
+              </div>
+            )}
+            <span className="text-[#dfc38c] text-xs font-semibold tracking-wide">
+              Profile
+            </span>
+          </button>
+
+          {/* Admin shortcut if logged in as admin */}
+          {isAdmin && (
+            <button
+              onClick={() => setCurrentView('admin')}
+              className="hidden sm:flex items-center gap-1 bg-amber-500/20 border border-amber-400/50 hover:bg-amber-500/30 text-amber-300 text-xs px-2.5 py-1.5 rounded-full transition-colors"
+              title="Open Admin Dashboard"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Admin</span>
+            </button>
+          )}
+
+          {/* Mobile Menu Hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl text-emerald-100 hover:text-white hover:bg-white/10"
+            className="lg:hidden p-1.5 text-emerald-100 hover:text-white rounded-full hover:bg-white/10"
+            aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
+
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#1f3b31] border-b border-emerald-800 px-4 pt-3 pb-6 space-y-2 max-h-[85vh] overflow-y-auto">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl text-sm font-medium text-emerald-100 hover:bg-white/10"
-            >
-              {link.name}
-            </a>
-          ))}
-          
-          <div className="pt-3 border-t border-emerald-800/80 flex flex-col gap-2.5">
-            {currentUser ? (
-              <div className="p-3 bg-white/5 rounded-2xl border border-white/10 space-y-3">
-                <div className="flex items-center gap-2.5">
-                  {currentUser.photoURL ? (
-                    <img src={currentUser.photoURL} alt="" className="w-8 h-8 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-white">
-                      <User className="w-4 h-4" />
-                    </div>
-                  )}
-                  <div className="truncate">
-                    <p className="font-semibold text-xs text-white truncate">{currentUser.name || 'Guest'}</p>
-                    <p className="text-[11px] text-emerald-200/80 truncate">{currentUser.email}</p>
-                  </div>
-                </div>
+        <div className="lg:hidden max-w-6xl mx-auto mt-2 bg-[#17372c]/98 backdrop-blur-lg rounded-3xl border border-emerald-800/80 shadow-2xl p-5 text-white animate-in slide-in-from-top-2 pointer-events-auto">
+          <div className="flex flex-col space-y-2">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-emerald-100 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                {link.name}
+              </a>
+            ))}
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <button
-                    onClick={() => {
-                      onOpenProfile();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white flex items-center justify-center gap-1.5"
-                  >
-                    <UserCog className="w-3.5 h-3.5 text-amber-300" />
-                    <span>My Profile</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      onOpenMyBookings();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="py-2 px-3 rounded-xl bg-[#e2a63b] text-[#142821] text-xs font-semibold flex items-center justify-center gap-1.5"
-                  >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>My Bookings</span>
-                  </button>
-                </div>
-
-                <div className="pt-1 text-center">
-                  <button
-                    onClick={() => {
-                      onSignOut();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-xs text-rose-300 hover:underline"
-                  >
-                    Sign out of account
-                  </button>
-                </div>
-              </div>
-            ) : (
+            <div className="pt-3 border-t border-emerald-800/60 flex flex-col gap-2">
               <button
                 onClick={() => {
-                  onRequireSignIn('general');
                   setMobileMenuOpen(false);
+                  handleBookingClick();
                 }}
-                className="w-full py-2.5 rounded-full border border-white/40 text-sm font-medium text-center hover:bg-white/10"
+                className="w-full py-2.5 rounded-xl bg-[#d8be8d] text-[#142821] font-semibold text-sm shadow-sm flex items-center justify-center gap-2"
               >
-                Sign in to Account
+                <Calendar className="w-4 h-4" />
+                <span>Reserve Room (Booking)</span>
               </button>
-            )}
 
-            {isAdmin && (
               <button
                 onClick={() => {
-                  setCurrentView('admin');
                   setMobileMenuOpen(false);
+                  onOpenProfile();
                 }}
-                className="w-full py-2.5 rounded-full bg-emerald-950 border border-amber-400 text-amber-300 text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow"
+                className="w-full py-2.5 rounded-xl border border-emerald-700/60 bg-[#22483b] text-[#dfc38c] font-semibold text-sm flex items-center justify-center gap-2"
               >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Open Admin Panel</span>
+                <span>Profile & Reservations</span>
               </button>
-            )}
+
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setCurrentView('admin');
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 font-semibold text-sm flex items-center justify-center gap-2"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Admin Dashboard</span>
+                </button>
+              )}
+
+              {currentUser && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onSignOut();
+                  }}
+                  className="w-full py-2 text-center text-xs text-rose-300 hover:text-rose-200 mt-1"
+                >
+                  Sign Out ({currentUser.email})
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

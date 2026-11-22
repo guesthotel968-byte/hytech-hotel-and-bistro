@@ -1,9 +1,18 @@
 // Hytech Hotel & Bistro API client service
 
-// If VITE_API_URL is set in environment (e.g. Render / Netlify), use it, otherwise use relative '/api'
+const isLocalhost = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.startsWith('192.168.') ||
+  window.location.hostname.endsWith('.local')
+);
+
+const RENDER_BACKEND = 'https://hytech-hotel-and-bistro.onrender.com/api';
+
+// Use environment VITE_API_URL if defined, otherwise localhost /api, or fallback to live Render backend
 const API_BASE = import.meta.env.VITE_API_URL 
   ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
-  : '/api';
+  : (isLocalhost ? '/api' : RENDER_BACKEND);
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
@@ -21,6 +30,13 @@ async function request(endpoint, options = {}) {
     return await res.json();
   } catch (error) {
     console.error(`API Error on ${endpoint}:`, error);
+    // If request to direct Render failed and we're on Netlify, try relative /api proxy as fallback
+    if (!isLocalhost && !endpoint.startsWith('http') && API_BASE === RENDER_BACKEND) {
+      try {
+        const fallbackRes = await fetch(`/api${endpoint}`, { ...options, headers });
+        if (fallbackRes.ok) return await fallbackRes.json();
+      } catch (e) {}
+    }
     throw error;
   }
 }

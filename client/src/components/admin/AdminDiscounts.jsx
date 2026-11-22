@@ -6,7 +6,6 @@ export default function AdminDiscounts() {
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Form fields matching screenshot
   const [code, setCode] = useState('');
   const [discountType, setDiscountType] = useState('percent');
   const [discountValue, setDiscountValue] = useState('');

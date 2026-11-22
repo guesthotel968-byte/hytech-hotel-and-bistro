@@ -123,6 +123,18 @@ export default function ReservationModal({
   }
 
   async function handleConfirmBooking() {
+    if (!selectedRoom) {
+      alert('Please select a room before confirming reservation.');
+      setStep(1);
+      return;
+    }
+
+    if (!fullName?.trim() || !email?.trim() || !phone?.trim()) {
+      alert('Please fill out your name, email, and phone number.');
+      setStep(2);
+      return;
+    }
+
     if (paymentMethod === 'GCash' && !gcashRef.trim()) {
       alert('Please enter your GCash reference number to complete reservation.');
       return;
@@ -131,9 +143,9 @@ export default function ReservationModal({
     setSubmitting(true);
     try {
       const payload = {
-        guest_name: fullName,
-        email: email,
-        phone: phone,
+        guest_name: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
         room_id: selectedRoom.id,
         room_name: selectedRoom.name,
         guest_count: guestCount,
@@ -148,12 +160,19 @@ export default function ReservationModal({
         extras_amount: extrasTotal,
         total_amount: finalTotal,
         payment_method: paymentMethod,
-        payment_reference: paymentMethod === 'GCash' ? gcashRef : null,
+        payment_reference: paymentMethod === 'GCash' ? gcashRef.trim() : null,
         special_requests: specialRequests || 'None'
       };
 
       const newBooking = await api.createBooking(payload);
       
+      // Also cache booking in localStorage for instant phone & client persistence
+      try {
+        const stored = JSON.parse(localStorage.getItem('hytech_my_bookings') || '[]');
+        stored.unshift(newBooking);
+        localStorage.setItem('hytech_my_bookings', JSON.stringify(stored));
+      } catch (e) {}
+
       // Fire celebration confetti!
       try {
         confetti({
@@ -166,7 +185,7 @@ export default function ReservationModal({
       onBookingSuccess(newBooking);
       onClose();
     } catch (err) {
-      alert('Failed to create reservation: ' + err.message);
+      alert('Failed to save reservation to database: ' + err.message);
     } finally {
       setSubmitting(false);
     }
