@@ -272,6 +272,22 @@ export default function Accommodations({ onSelectRoomForBooking }) {
                   </div>
                 </div>
 
+                {/* Legend matching Admin Dashboard */}
+                <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] font-medium text-stone-600 pb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#52a578]"></span>
+                    <span>Free</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#df6653]"></span>
+                    <span>Booked</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#eab308]"></span>
+                    <span>Closed / Blocked</span>
+                  </div>
+                </div>
+
                 {/* Notice explaining Requirement 3 */}
                 <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200/70 text-[11px] text-emerald-900 flex items-start gap-1.5">
                   <Info className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
@@ -298,23 +314,35 @@ export default function Accommodations({ onSelectRoomForBooking }) {
                       {/* Month Days */}
                       {calData && Object.keys(calData.days || {}).map((dayNum) => {
                         const dayObj = calData.days[dayNum];
-                        const isReserved = dayObj.status === 'reserved';
+                        const isReserved = dayObj.status === 'reserved' || (dayObj.count > 0);
+                        const isBlocked = dayObj.status === 'blocked' || dayObj.status === 'unavailable';
+
+                        let bgClass = 'bg-emerald-50/70 text-emerald-950 hover:bg-emerald-100/80 border border-emerald-200';
+                        let labelText = 'Free';
+                        let labelColor = 'text-emerald-700';
+                        let hoverTitle = 'Available for booking';
+
+                        if (isReserved) {
+                          bgClass = 'bg-rose-100 text-rose-900 border border-rose-300 font-bold';
+                          labelText = 'Booked';
+                          labelColor = 'text-rose-700';
+                          hoverTitle = `Booked (${dayObj.count} approved guest stay)`;
+                        } else if (isBlocked) {
+                          bgClass = 'bg-amber-100 text-amber-900 border border-amber-300 font-bold';
+                          labelText = 'Closed';
+                          labelColor = 'text-amber-800';
+                          hoverTitle = `Closed: ${dayObj.reason || 'Unavailable'}`;
+                        }
 
                         return (
                           <div
                             key={dayNum}
-                            className={`h-9 rounded-xl flex flex-col items-center justify-center font-medium transition-all ${
-                              isReserved
-                                ? 'bg-rose-100 text-rose-900 border border-rose-300 font-bold'
-                                : 'bg-emerald-50/50 text-emerald-950 hover:bg-emerald-100/70 border border-emerald-100'
-                            }`}
-                            title={isReserved ? `Reserved (${dayObj.count} approved guest stay)` : 'Available for booking'}
+                            className={`h-9 rounded-xl flex flex-col items-center justify-center font-medium transition-all ${bgClass}`}
+                            title={hoverTitle}
                           >
                             <span className="text-xs leading-none">{dayNum}</span>
-                            <span className={`text-[8px] font-semibold tracking-tighter ${
-                              isReserved ? 'text-rose-700' : 'text-emerald-700'
-                            }`}>
-                              {isReserved ? 'Booked' : 'Free'}
+                            <span className={`text-[8px] font-semibold tracking-tighter ${labelColor}`}>
+                              {labelText}
                             </span>
                           </div>
                         );

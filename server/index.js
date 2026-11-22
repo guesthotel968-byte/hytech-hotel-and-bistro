@@ -616,15 +616,19 @@ app.post('/api/bookings', async (req, res) => {
       special_requests || 'None'
     );
 
-    // Save or update client entry
-    const existingClient = await db.get('SELECT * FROM clients WHERE LOWER(email) = LOWER(?)', email);
-    if (!existingClient) {
-      await db.run('INSERT INTO clients (name, email, phone) VALUES (?, ?, ?)', guest_name, email, phone);
-    } else {
-      await db.run('UPDATE clients SET name = ?, phone = ? WHERE id = ?', guest_name, phone, existingClient.id);
+    // Save or update client entry safely
+    try {
+      const existingClient = await db.get('SELECT * FROM clients WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))', email);
+      if (!existingClient) {
+        await db.run('INSERT INTO clients (name, email, phone) VALUES (?, ?, ?)', guest_name, email.trim(), phone);
+      } else {
+        await db.run('UPDATE clients SET name = ?, phone = ? WHERE id = ?', guest_name, phone, existingClient.id);
+      }
+    } catch (clientErr) {
+      console.warn('Notice: client directory update:', clientErr.message);
     }
 
-    const created = await db.get('SELECT * FROM bookings WHERE id = ?', result.lastInsertRowid);
+    const created = await db.get('SELECT * FROM bookings WHERE reference_id = ?', reference_id);
     if (created) {
       created.companions = typeof created.companions_json === 'string' ? JSON.parse(created.companions_json || '[]') : (created.companions_json || []);
       created.extras = typeof created.extras_json === 'string' ? JSON.parse(created.extras_json || '[]') : (created.extras_json || []);
@@ -776,7 +780,7 @@ app.post('/api/reviews', async (req, res) => {
 
 // ==========================================
 // 9. CALENDAR & OCCUPANCY API
-// Only ADMIN-APPROVED reservations ('Confirmed', 'Checked in') appear on the calendar!
+// Displays approved bookings and admin custom blocks/unavailabilities
 // ==========================================
 app.get('/api/calendar', async (req, res) => {
   try {
@@ -789,7 +793,7 @@ app.get('/api/calendar', async (req, res) => {
     const daysInMonth = new Date(y, m, 0).getDate();
     const endStr = `${y}-${monthStr}-${daysInMonth}`;
 
-    // IMPORTANT: Only approved/confirmed bookings block calendar dates!
+    // 1. Approved/confirmed bookings block calendar dates!
     let query = `
       SELECT reference_id, guest_name, room_id, room_name, room_number, check_in, check_out, status
       FROM bookings
@@ -809,6 +813,15 @@ app.get('/api/calendar', async (req, res) => {
 
     const bookings = await db.all(query, params);
 
+    // 2. Custom admin blocks (closed for maintenance, unavailable, private events)
+    let blockQuery = 'SELECT * FROM calendar_blocks WHERE date >= ? AND date <= ?';
+    const blockParams = [startStr, endStr];
+    if (room_id) {
+      blockQuery += ' AND (room_id = ? OR room_id IS NULL OR room_id = 0)';
+      blockParams.push(room_id);
+    }
+    const blocks = await db.all(blockQuery, blockParams);
+
     // Calculate occupancy map for each day
     const daysData = {};
     for (let day = 1; day <= daysInMonth; day++) {
@@ -816,11 +829,25 @@ app.get('/api/calendar', async (req, res) => {
       const activeForNight = bookings.filter(b => {
         return b.check_in <= dayDateStr && dayDateStr < b.check_out;
       });
+      const customBlock = blocks.find(b => b.date === dayDateStr);
+
+      let dayStatus = 'available';
+      let dayReason = '';
+
+      if (customBlock) {
+        dayStatus = customBlock.status || 'blocked';
+        dayReason = customBlock.reason || 'Unavailable';
+      } else if (activeForNight.length > 0) {
+        dayStatus = 'reserved';
+        dayReason = 'Booked';
+      }
 
       daysData[day] = {
         date: dayDateStr,
         day,
-        status: activeForNight.length > 0 ? 'reserved' : 'available',
+        status: dayStatus,
+        reason: dayReason,
+        blockId: customBlock?.id || null,
         count: activeForNight.length,
         guests: activeForNight.map(b => ({
           reference_id: b.reference_id,
@@ -839,6 +866,45 @@ app.get('/api/calendar', async (req, res) => {
       firstDayOfWeek: new Date(y, m - 1, 1).getDay(), // 0 = Sun, 1 = Mon ...
       days: daysData
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin toggle date availability (Available vs Blocked / Unavailable)
+app.post('/api/calendar/toggle-date', async (req, res) => {
+  try {
+    const { date, room_id, room_name, status, reason } = req.body;
+    if (!date) return res.status(400).json({ error: 'Date is required' });
+
+    let existing = null;
+    if (room_id) {
+      existing = await db.get('SELECT * FROM calendar_blocks WHERE date = ? AND room_id = ?', date, room_id);
+    } else {
+      existing = await db.get('SELECT * FROM calendar_blocks WHERE date = ? AND (room_id IS NULL OR room_id = 0)', date);
+    }
+
+    if (existing) {
+      if (status === 'available') {
+        await db.run('DELETE FROM calendar_blocks WHERE id = ?', existing.id);
+        return res.json({ success: true, message: `Date ${date} marked as Available`, status: 'available' });
+      } else {
+        await db.run(
+          'UPDATE calendar_blocks SET status = ?, reason = ? WHERE id = ?',
+          status || 'blocked', reason || 'Unavailable', existing.id
+        );
+        return res.json({ success: true, message: `Date ${date} updated to ${status || 'blocked'}`, status: status || 'blocked' });
+      }
+    } else {
+      if (status === 'available') {
+        return res.json({ success: true, message: `Date ${date} is already Available`, status: 'available' });
+      }
+      await db.run(
+        'INSERT INTO calendar_blocks (date, room_id, room_name, status, reason) VALUES (?, ?, ?, ?, ?)',
+        date, room_id || null, room_name || null, status || 'blocked', reason || 'Unavailable'
+      );
+      return res.json({ success: true, message: `Date ${date} marked as ${status || 'blocked'}`, status: status || 'blocked' });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -915,6 +981,6 @@ app.use((req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Hytech Hotel & Bistro Server listening on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Hytech Hotel & Bistro Server listening on port ${PORT} (0.0.0.0)`);
 });

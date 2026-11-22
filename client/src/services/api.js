@@ -3,7 +3,7 @@
 const isLocalhost = typeof window !== 'undefined' && (
   window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1' ||
-  window.location.hostname.startsWith('192.168.') ||
+  /^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname) ||
   window.location.hostname.endsWith('.local')
 );
 
@@ -108,13 +108,14 @@ export const api = {
   getReviews: () => request('/reviews'),
   createReview: (data) => request('/reviews', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Calendar (Optionally filter by room, returns ONLY admin-confirmed bookings)
+  // Calendar (Optionally filter by room, returns ONLY admin-confirmed bookings + admin blocks)
   getCalendar: (year, month, roomId = null, roomName = null) => {
     let url = `/calendar?year=${year}&month=${month}`;
     if (roomId) url += `&room_id=${roomId}`;
     if (roomName) url += `&room_name=${encodeURIComponent(roomName)}`;
     return request(url);
   },
+  toggleCalendarDate: (data) => request('/calendar/toggle-date', { method: 'POST', body: JSON.stringify(data) }),
 
   // Dashboard Stats
   getDashboardStats: () => request('/dashboard/stats')

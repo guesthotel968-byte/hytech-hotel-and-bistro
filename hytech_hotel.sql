@@ -210,3 +210,17 @@ CREATE TABLE `clients` (
 INSERT INTO `clients` (`id`, `name`, `email`, `phone`) VALUES
 (1, 'Marvin Digman', 'guesthotel968@gmail.com', '09319505863'),
 (2, 'Carl Faa', 'carlfaa@hytech.ph', '09141278921');
+
+-- ---------------------------------------------------------------------
+-- 10. Table: calendar_blocks (Admin Room & Date Availability Controls)
+-- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS `calendar_blocks`;
+CREATE TABLE `calendar_blocks` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `date` VARCHAR(50) NOT NULL,
+  `room_id` INT DEFAULT NULL,
+  `room_name` VARCHAR(191) DEFAULT NULL,
+  `status` VARCHAR(50) NOT NULL DEFAULT 'blocked',
+  `reason` VARCHAR(255) DEFAULT 'Unavailable',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

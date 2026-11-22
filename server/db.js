@@ -277,6 +277,18 @@ async function initMysqlTables() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  await conn.query(`
+    CREATE TABLE IF NOT EXISTS calendar_blocks (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      date VARCHAR(20) NOT NULL,
+      room_id INT DEFAULT NULL,
+      room_name VARCHAR(191) DEFAULT NULL,
+      status VARCHAR(50) NOT NULL DEFAULT 'blocked',
+      reason VARCHAR(255) DEFAULT 'Unavailable',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+
   try {
     await conn.query('ALTER TABLE bookings ADD COLUMN companions_json LONGTEXT AFTER discount_amount;');
   } catch (e) {
@@ -471,6 +483,16 @@ function initSqliteTables() {
       name TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       phone TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS calendar_blocks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      room_id INTEGER DEFAULT NULL,
+      room_name TEXT DEFAULT NULL,
+      status TEXT NOT NULL DEFAULT 'blocked',
+      reason TEXT DEFAULT 'Unavailable',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);

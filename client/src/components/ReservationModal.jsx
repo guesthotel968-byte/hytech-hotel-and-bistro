@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Calendar, User, CreditCard, Sparkles, AlertCircle, Tag } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { api } from '../services/api';
 
 export default function ReservationModal({ 
@@ -171,15 +170,6 @@ export default function ReservationModal({
         const stored = JSON.parse(localStorage.getItem('hytech_my_bookings') || '[]');
         stored.unshift(newBooking);
         localStorage.setItem('hytech_my_bookings', JSON.stringify(stored));
-      } catch (e) {}
-
-      // Fire celebration confetti!
-      try {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
       } catch (e) {}
 
       onBookingSuccess(newBooking);
