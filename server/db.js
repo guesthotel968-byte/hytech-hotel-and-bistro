@@ -70,10 +70,15 @@ const defaultExtras = [
 
 const defaultKeys = [
   ['Key 1', 'Assigned', 'Room 101', 'Marvin Digman', 'RES-8245281', 'Physical brass room key + magnetic power card'],
-  ['Key 2', 'Available', 'Room 102', null, null, 'RFID Smart Card'],
+  ['Key 2', 'Assigned', 'Room 102', 'Carl Faa', 'RES-E6F42079C1FF43', 'RFID Smart Card'],
   ['Key 3', 'Available', 'Room 103', null, null, 'RFID Smart Card'],
   ['Key 4', 'Available', 'Room 104', null, null, 'Physical key'],
-  ['Key 5', 'Lost / damaged', 'Room 201', null, null, 'Reported lost Oct 2026, replacement ordered']
+  ['Key 5', 'Lost / damaged', 'Room 201', null, null, 'Reported lost Oct 2026, replacement ordered'],
+  ['Key 6', 'Available', 'Room 202', null, null, 'RFID Smart Card'],
+  ['Key 7', 'Available', 'Room 203', null, null, 'RFID Smart Card'],
+  ['Key 8', 'Available', 'Room 204', null, null, 'RFID Smart Card'],
+  ['Key 9', 'Available', 'Room 301', null, null, 'RFID Master Card'],
+  ['Key 10', 'Available', 'Room 302', null, null, 'RFID Smart Card']
 ];
 
 const defaultFood = [
@@ -294,9 +299,14 @@ async function initMysqlTables() {
     for (const e of defaultExtras) {
       await conn.query('INSERT INTO extras (name, price, billing_unit, description, is_available) VALUES (?, ?, ?, ?, ?)', e);
     }
+  // Ensure keys table is seeded if empty
+  const [keyRows] = await conn.query('SELECT COUNT(*) as count FROM `keys`');
+  if (keyRows[0].count === 0) {
+    console.log('[Database] Seeding initial access keys into MySQL...');
     for (const k of defaultKeys) {
       await conn.query('INSERT INTO `keys` (key_name, status, room_number, assigned_guest, booking_id, notes) VALUES (?, ?, ?, ?, ?, ?)', k);
     }
+  }
     for (const f of defaultFood) {
       await conn.query('INSERT INTO food_items (name, category, price, price_unit, description, image_url, is_available) VALUES (?, ?, ?, ?, ?, ?, ?)', f);
     }
@@ -533,6 +543,18 @@ function initSqliteTables() {
     insertReview.run('RES-8245281', 'Marvin Digman', 'Economy Fan Room', 5, 'Super clean rooms and very accommodating staff! The bistro breakfast was delicious and affordable. Will definitely come back when visiting Bongabong!');
     insertReview.run('RES-SAMPLE01', 'Elena Soriano', 'Standard Room', 5, 'Exceptional hospitality! Location is great, Wi-Fi is fast, and check-in via GCash was seamless.');
   }
+
+  // Ensure keys are populated in SQLite if empty
+  try {
+    const keyCount = sqldb.prepare('SELECT COUNT(*) as count FROM `keys`').get().count;
+    if (keyCount === 0) {
+      const insertKey = sqldb.prepare(`
+        INSERT INTO \`keys\` (key_name, status, room_number, assigned_guest, booking_id, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+      for (const k of defaultKeys) insertKey.run(...k);
+    }
+  } catch (e) {}
 }
 
 // -------------------------------------------------------------

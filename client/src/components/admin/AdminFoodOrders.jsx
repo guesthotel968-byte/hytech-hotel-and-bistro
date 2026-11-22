@@ -32,9 +32,10 @@ export default function AdminFoodOrders() {
     if (!silent) setLoading(true);
     try {
       const data = await api.getFoodOrders();
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load food orders:', err);
+      if (!silent) setOrders([]);
     } finally {
       if (!silent) setLoading(false);
     }
@@ -43,9 +44,10 @@ export default function AdminFoodOrders() {
   async function fetchFoodItems() {
     try {
       const data = await api.getFoodItems(null, false); // get all including unavailable
-      setFoodItems(data);
+      setFoodItems(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load food items:', err);
+      setFoodItems([]);
     }
   }
 

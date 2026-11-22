@@ -43,9 +43,10 @@ export default function AdminBookings({ onViewReceipt }) {
         status: statusFilter,
         search: searchQuery
       });
-      setBookings(data);
+      setBookings(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load bookings:', err);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
@@ -55,7 +56,8 @@ export default function AdminBookings({ onViewReceipt }) {
   const todayStr = new Date().toISOString().split('T')[0];
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-  const reportBookings = bookings.filter(b => {
+  const safeBookings = Array.isArray(bookings) ? bookings : [];
+  const reportBookings = safeBookings.filter(b => {
     // Room filter
     if (printSelectedRoom !== 'All' && b.room_name !== printSelectedRoom) {
       return false;

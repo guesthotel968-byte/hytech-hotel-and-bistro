@@ -17,15 +17,17 @@ export default function AdminClients() {
     setLoading(true);
     try {
       const data = await api.getClients(search);
-      setClients(data);
+      setClients(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load clients:', err);
+      setClients([]);
     } finally {
       setLoading(false);
     }
   }
 
-  const filteredClients = clients.filter(c => {
+  const safeClients = Array.isArray(clients) ? clients : [];
+  const filteredClients = safeClients.filter(c => {
     if (filterType === 'with_companions') {
       return c.companions && c.companions.length > 0;
     }

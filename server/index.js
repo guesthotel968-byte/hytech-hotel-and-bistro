@@ -279,7 +279,7 @@ app.post('/api/vouchers/validate', async (req, res) => {
 app.get('/api/keys', async (req, res) => {
   try {
     const { status, search } = req.query;
-    let query = 'SELECT * FROM keys WHERE 1=1';
+    let query = 'SELECT * FROM `keys` WHERE 1=1';
     const params = [];
 
     if (status && status !== 'All statuses') {
@@ -295,10 +295,10 @@ app.get('/api/keys', async (req, res) => {
     const rows = await db.all(query, params);
 
     // Summary counters
-    const totalRow = await db.get('SELECT COUNT(*) as c FROM keys');
-    const availRow = await db.get("SELECT COUNT(*) as c FROM keys WHERE status = 'Available'");
-    const assignRow = await db.get("SELECT COUNT(*) as c FROM keys WHERE status = 'Assigned'");
-    const lostRow = await db.get("SELECT COUNT(*) as c FROM keys WHERE status = 'Lost / damaged'");
+    const totalRow = await db.get('SELECT COUNT(*) as c FROM `keys`');
+    const availRow = await db.get("SELECT COUNT(*) as c FROM `keys` WHERE status = 'Available'");
+    const assignRow = await db.get("SELECT COUNT(*) as c FROM `keys` WHERE status = 'Assigned'");
+    const lostRow = await db.get("SELECT COUNT(*) as c FROM `keys` WHERE status = 'Lost / damaged'");
 
     res.json({
       keys: rows,
@@ -318,11 +318,11 @@ app.post('/api/keys', async (req, res) => {
   try {
     const { key_name, room_number, status, notes } = req.body;
     const result = await db.run(
-      `INSERT INTO keys (key_name, room_number, status, notes)
+      `INSERT INTO \`keys\` (key_name, room_number, status, notes)
        VALUES (?, ?, ?, ?)`,
       key_name, room_number || null, status || 'Available', notes || null
     );
-    const newKey = await db.get('SELECT * FROM keys WHERE id = ?', result.lastInsertRowid);
+    const newKey = await db.get('SELECT * FROM `keys` WHERE id = ?', result.lastInsertRowid);
     res.status(201).json(newKey);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -333,12 +333,12 @@ app.put('/api/keys/:id', async (req, res) => {
   try {
     const { key_name, room_number, status, assigned_guest, booking_id, notes } = req.body;
     await db.run(
-      `UPDATE keys
+      `UPDATE \`keys\`
        SET key_name = ?, room_number = ?, status = ?, assigned_guest = ?, booking_id = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
       key_name, room_number, status, assigned_guest, booking_id, notes, req.params.id
     );
-    const updated = await db.get('SELECT * FROM keys WHERE id = ?', req.params.id);
+    const updated = await db.get('SELECT * FROM `keys` WHERE id = ?', req.params.id);
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -347,7 +347,7 @@ app.put('/api/keys/:id', async (req, res) => {
 
 app.delete('/api/keys/:id', async (req, res) => {
   try {
-    await db.run('DELETE FROM keys WHERE id = ?', req.params.id);
+    await db.run('DELETE FROM \`keys\` WHERE id = ?', req.params.id);
     res.json({ success: true, message: 'Key deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -856,10 +856,10 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const totalRevenueRow = await db.get("SELECT SUM(total_amount) as s FROM bookings WHERE payment_status = 'Paid'");
     
     // Key counts
-    const keyTotalRow = await db.get('SELECT COUNT(*) as c FROM keys');
-    const keyAvailableRow = await db.get("SELECT COUNT(*) as c FROM keys WHERE status = 'Available'");
-    const keyAssignedRow = await db.get("SELECT COUNT(*) as c FROM keys WHERE status = 'Assigned'");
-    const keyLostRow = await db.get("SELECT COUNT(*) as c FROM keys WHERE status = 'Lost / damaged'");
+    const keyTotalRow = await db.get('SELECT COUNT(*) as c FROM `keys`');
+    const keyAvailableRow = await db.get("SELECT COUNT(*) as c FROM `keys` WHERE status = 'Available'");
+    const keyAssignedRow = await db.get("SELECT COUNT(*) as c FROM `keys` WHERE status = 'Assigned'");
+    const keyLostRow = await db.get("SELECT COUNT(*) as c FROM `keys` WHERE status = 'Lost / damaged'");
 
     // Food orders
     const foodOrdersTotalRow = await db.get('SELECT COUNT(*) as c FROM food_orders');

@@ -23,9 +23,10 @@ export default function AdminExtras() {
     setLoading(true);
     try {
       const data = await api.getExtras();
-      setExtras(data);
+      setExtras(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load extras:', err);
+      setExtras([]);
     } finally {
       setLoading(false);
     }

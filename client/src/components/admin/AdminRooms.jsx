@@ -27,9 +27,10 @@ export default function AdminRooms() {
     setLoading(true);
     try {
       const data = await api.getRooms();
-      setRooms(data);
+      setRooms(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load rooms:', err);
+      setRooms([]);
     } finally {
       setLoading(false);
     }
