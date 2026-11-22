@@ -1,0 +1,27 @@
+{
+  "name": "hytech-hotel-and-bistro",
+  "version": "1.0.0",
+  "description": "Online reservation and bistro management system for Hytech Hotel & Bistro, Bongabong, Oriental Mindoro",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "client": "npm run --prefix client dev",
+    "build": "npm run --prefix client build",
+    "install:all": "npm install && npm install --prefix client"
+  },
+  "keywords": [
+    "hotel-reservation",
+    "bistro",
+    "react",
+    "express",
+    "mindoro"
+  ],
+  "author": "Jhon Carl Faa",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0"
+  }
+}
