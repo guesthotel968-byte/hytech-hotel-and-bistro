@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, ShieldAlert, ArrowLeft, LogIn } from 'lucide-react';
+import { ADMIN_EMAIL, isUserAdmin } from '../../services/firebase';
 import AdminSidebar from './AdminSidebar';
 import AdminDashboard from './AdminDashboard';
 import AdminCalendar from './AdminCalendar';
@@ -11,9 +12,49 @@ import AdminDiscounts from './AdminDiscounts';
 import AdminFoodOrders from './AdminFoodOrders';
 import AdminExtras from './AdminExtras';
 
-export default function AdminLayout({ onBackToWebsite, onViewReceipt }) {
+export default function AdminLayout({ currentUser, onBackToWebsite, onRequireSignIn, onViewReceipt }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Security Guard: Check if current user is the administrator
+  if (!currentUser || !isUserAdmin(currentUser)) {
+    return (
+      <div className="min-h-screen bg-[#eaf0ec] flex items-center justify-center p-4">
+        <div className="bg-[#fcfbf7] rounded-3xl max-w-md w-full p-8 text-center shadow-2xl border border-stone-200">
+          <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h2 className="font-serif text-3xl font-bold text-stone-900 mb-2">Access Denied</h2>
+          <p className="text-xs sm:text-sm text-stone-600 mb-4 leading-relaxed">
+            The Admin Dashboard is strictly reserved for the authorized hotel administrator.
+          </p>
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-950 font-mono mb-6">
+            Authorized Email: <strong>{ADMIN_EMAIL}</strong>
+            {currentUser && (
+              <div className="mt-1 text-stone-500 font-sans">
+                You are currently signed in as: <strong>{currentUser.email}</strong>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={onBackToWebsite}
+              className="flex-1 py-2.5 rounded-full border border-stone-300 text-stone-700 text-xs sm:text-sm font-semibold hover:bg-stone-100"
+            >
+              Back to Website
+            </button>
+            <button
+              onClick={() => onRequireSignIn('admin')}
+              className="flex-1 py-2.5 rounded-full bg-[#183429] hover:bg-[#12281f] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 shadow"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign In as Admin</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#eaf0ec] flex">
