@@ -20,6 +20,7 @@ export default function ReservationModal({
   const [fullName, setFullName] = useState(currentUser?.name || 'Carl Faa');
   const [email, setEmail] = useState(currentUser?.email || 'guesthotel968@gmail.com');
   const [phone, setPhone] = useState(currentUser?.phone || '09141278921');
+  const [companions, setCompanions] = useState([]);
   
   // Set default dates to 2026-11-18 to 2026-11-19 as in screenshot or current
   const [checkIn, setCheckIn] = useState('2026-11-18');
@@ -136,6 +137,7 @@ export default function ReservationModal({
         room_id: selectedRoom.id,
         room_name: selectedRoom.name,
         guest_count: guestCount,
+        companions: companions.filter(c => c && c.trim()),
         check_in: checkIn,
         check_out: checkOut,
         nights: nights,
@@ -367,6 +369,36 @@ export default function ReservationModal({
                 />
               </div>
             </div>
+
+            {/* Companion / Kasama fields if guestCount > 1 */}
+            {guestCount > 1 && (
+              <div className="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-900/10 space-y-2">
+                <label className="block text-xs font-semibold text-emerald-950 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-emerald-800" />
+                  <span>Kasama / Companion Names ({guestCount - 1} companion{guestCount > 2 ? 's' : ''})</span>
+                </label>
+                <p className="text-[11px] text-stone-500">
+                  Please provide the full name of each companion for hotel guest registration and directory.
+                </p>
+                <div className="space-y-2 pt-1">
+                  {Array.from({ length: Math.max(0, guestCount - 1) }).map((_, idx) => (
+                    <input
+                      key={idx}
+                      type="text"
+                      required
+                      placeholder={`Companion #${idx + 1} Full Name`}
+                      value={companions[idx] || ''}
+                      onChange={(e) => {
+                        const updated = [...companions];
+                        updated[idx] = e.target.value;
+                        setCompanions(updated);
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-stone-300 bg-white text-xs sm:text-sm text-stone-900"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-medium text-stone-700 mb-1">Special Requests (Optional)</label>

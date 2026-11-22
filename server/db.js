@@ -237,6 +237,7 @@ async function initMysqlTables() {
       room_charges DECIMAL(10,2) NOT NULL,
       discount_code VARCHAR(100) DEFAULT NULL,
       discount_amount DECIMAL(10,2) DEFAULT 0.00,
+      companions_json LONGTEXT,
       extras_json LONGTEXT,
       extras_amount DECIMAL(10,2) DEFAULT 0.00,
       total_amount DECIMAL(10,2) NOT NULL,
@@ -270,6 +271,12 @@ async function initMysqlTables() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
+
+  try {
+    await conn.query('ALTER TABLE bookings ADD COLUMN companions_json LONGTEXT AFTER discount_amount;');
+  } catch (e) {
+    // Column already exists
+  }
 
   // Seed data if empty
   const [roomRows] = await conn.query('SELECT COUNT(*) as count FROM rooms');
@@ -427,6 +434,7 @@ function initSqliteTables() {
       room_charges REAL NOT NULL,
       discount_code TEXT,
       discount_amount REAL DEFAULT 0,
+      companions_json TEXT DEFAULT '[]',
       extras_json TEXT DEFAULT '[]',
       extras_amount REAL DEFAULT 0,
       total_amount REAL NOT NULL,
@@ -456,6 +464,12 @@ function initSqliteTables() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  try {
+    sqldb.exec("ALTER TABLE bookings ADD COLUMN companions_json TEXT DEFAULT '[]';");
+  } catch (e) {
+    // Column already exists
+  }
 
   const count = sqldb.prepare('SELECT COUNT(*) as count FROM rooms').get().count;
   if (count === 0) {

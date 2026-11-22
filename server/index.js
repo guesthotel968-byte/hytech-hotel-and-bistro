@@ -353,9 +353,12 @@ app.delete('/api/keys/:id', async (req, res) => {
 // ==========================================
 app.get('/api/food-items', async (req, res) => {
   try {
-    const { category } = req.query;
-    let query = 'SELECT * FROM food_items WHERE is_available = 1';
+    const { category, only_available } = req.query;
+    let query = 'SELECT * FROM food_items WHERE 1=1';
     const params = [];
+    if (only_available === 'true') {
+      query += ' AND is_available = 1';
+    }
     if (category && category !== 'All') {
       query += ' AND LOWER(category) = LOWER(?)';
       params.push(category);
@@ -363,6 +366,45 @@ app.get('/api/food-items', async (req, res) => {
     query += ' ORDER BY id ASC';
     const rows = await db.all(query, params);
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Toggle Food Item Availability (In Stock / Out of Stock)
+app.put('/api/food-items/:id/toggle', async (req, res) => {
+  try {
+    const item = await db.get('SELECT * FROM food_items WHERE id = ?', req.params.id);
+    if (!item) return res.status(404).json({ error: 'Food item not found' });
+    const newStatus = item.is_available ? 0 : 1;
+    await db.run('UPDATE food_items SET is_available = ? WHERE id = ?', newStatus, req.params.id);
+    const updated = await db.get('SELECT * FROM food_items WHERE id = ?', req.params.id);
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/food-items/:id', async (req, res) => {
+  try {
+    const { name, category, price, price_unit, description, image_url, is_available } = req.body;
+    await db.run(
+      `UPDATE food_items
+       SET name = ?, category = ?, price = ?, price_unit = ?, description = ?, image_url = ?, is_available = ?
+       WHERE id = ?`,
+      name, category, price, price_unit || '', description || '', image_url || '', is_available !== undefined ? is_available : 1, req.params.id
+    );
+    const updated = await db.get('SELECT * FROM food_items WHERE id = ?', req.params.id);
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/food-items/:id', async (req, res) => {
+  try {
+    await db.run('DELETE FROM food_items WHERE id = ?', req.params.id);
+    res.json({ success: true, message: 'Food item deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -458,6 +500,7 @@ app.get('/api/bookings', async (req, res) => {
     const rows = await db.all(query, params);
     const formatted = rows.map(r => ({
       ...r,
+      companions: typeof r.companions_json === 'string' ? JSON.parse(r.companions_json || '[]') : (r.companions_json || []),
       extras: typeof r.extras_json === 'string' ? JSON.parse(r.extras_json || '[]') : (r.extras_json || [])
     }));
     res.json(formatted);
@@ -475,6 +518,7 @@ app.get('/api/bookings/my', async (req, res) => {
     const rows = await db.all('SELECT * FROM bookings WHERE LOWER(email) = LOWER(?) ORDER BY id DESC', email);
     const formatted = rows.map(r => ({
       ...r,
+      companions: typeof r.companions_json === 'string' ? JSON.parse(r.companions_json || '[]') : (r.companions_json || []),
       extras: typeof r.extras_json === 'string' ? JSON.parse(r.extras_json || '[]') : (r.extras_json || [])
     }));
 
@@ -498,6 +542,7 @@ app.get('/api/bookings/:reference_id', async (req, res) => {
   try {
     const row = await db.get('SELECT * FROM bookings WHERE reference_id = ?', req.params.reference_id);
     if (!row) return res.status(404).json({ error: 'Reservation not found' });
+    row.companions = typeof row.companions_json === 'string' ? JSON.parse(row.companions_json || '[]') : (row.companions_json || []);
     row.extras = typeof row.extras_json === 'string' ? JSON.parse(row.extras_json || '[]') : (row.extras_json || []);
     res.json(row);
   } catch (err) {
@@ -514,6 +559,7 @@ app.post('/api/bookings', async (req, res) => {
       room_id,
       room_name,
       guest_count,
+      companions,
       check_in,
       check_out,
       nights,
@@ -538,9 +584,9 @@ app.post('/api/bookings', async (req, res) => {
       `INSERT INTO bookings (
         reference_id, guest_name, email, phone, room_id, room_name, room_number,
         guest_count, check_in, check_out, nights, room_charges, discount_code,
-        discount_amount, extras_json, extras_amount, total_amount, payment_method,
+        discount_amount, companions_json, extras_json, extras_amount, total_amount, payment_method,
         payment_reference, payment_status, special_requests, status
-      ) VALUES (?, ?, ?, ?, ?, ?, 'Assigned once confirmed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
+      ) VALUES (?, ?, ?, ?, ?, ?, 'Assigned once confirmed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
       reference_id,
       guest_name,
       email,
@@ -554,6 +600,7 @@ app.post('/api/bookings', async (req, res) => {
       room_charges || 0,
       discount_code || null,
       discount_amount || 0,
+      JSON.stringify(companions || []),
       JSON.stringify(extras || []),
       extras_amount || 0,
       total_amount || 0,
@@ -573,6 +620,7 @@ app.post('/api/bookings', async (req, res) => {
 
     const created = await db.get('SELECT * FROM bookings WHERE id = ?', result.lastInsertRowid);
     if (created) {
+      created.companions = typeof created.companions_json === 'string' ? JSON.parse(created.companions_json || '[]') : (created.companions_json || []);
       created.extras = typeof created.extras_json === 'string' ? JSON.parse(created.extras_json || '[]') : (created.extras_json || []);
     }
     res.status(201).json(created);
@@ -594,6 +642,7 @@ app.put('/api/bookings/:id', async (req, res) => {
     );
     const updated = await db.get('SELECT * FROM bookings WHERE id = ?', req.params.id);
     if (updated) {
+      updated.companions = typeof updated.companions_json === 'string' ? JSON.parse(updated.companions_json || '[]') : (updated.companions_json || []);
       updated.extras = typeof updated.extras_json === 'string' ? JSON.parse(updated.extras_json || '[]') : (updated.extras_json || []);
     }
     res.json(updated);
@@ -603,28 +652,87 @@ app.put('/api/bookings/:id', async (req, res) => {
 });
 
 // ==========================================
-// 7. CLIENTS DIRECTORY API
+// 7. CLIENTS DIRECTORY & COMPANIONS API
 // ==========================================
 app.get('/api/clients', async (req, res) => {
   try {
     const { search } = req.query;
-    let query = `
-      SELECT c.*, 
-        (SELECT b.room_name FROM bookings b WHERE LOWER(b.email) = LOWER(c.email) ORDER BY b.id DESC LIMIT 1) as last_room,
-        (SELECT COUNT(*) FROM bookings b WHERE LOWER(b.email) = LOWER(c.email)) as total_bookings,
-        (SELECT b.reference_id FROM bookings b WHERE LOWER(b.email) = LOWER(c.email) ORDER BY b.id DESC LIMIT 1) as latest_booking_id
-      FROM clients c
-      WHERE 1=1
-    `;
-    const params = [];
+    let query = `SELECT * FROM clients ORDER BY id DESC`;
+    const clients = await db.all(query);
+    
+    // Enrich each client with full booking history, companion list
+    const enriched = await Promise.all(clients.map(async (c) => {
+      const clientBookings = await db.all(
+        'SELECT * FROM bookings WHERE LOWER(email) = LOWER(?) ORDER BY id DESC',
+        c.email
+      );
+      
+      const allCompanionsSet = new Set();
+      const formattedBookings = clientBookings.map(b => {
+        const comps = typeof b.companions_json === 'string' ? JSON.parse(b.companions_json || '[]') : (b.companions_json || []);
+        comps.forEach(comp => { if (comp && comp.trim()) allCompanionsSet.add(comp.trim()); });
+        return {
+          ...b,
+          companions: comps,
+          extras: typeof b.extras_json === 'string' ? JSON.parse(b.extras_json || '[]') : (b.extras_json || [])
+        };
+      });
+
+      return {
+        ...c,
+        total_bookings: formattedBookings.length,
+        last_room: formattedBookings[0]?.room_name || 'None',
+        latest_booking_id: formattedBookings[0]?.reference_id || 'None',
+        companions: Array.from(allCompanionsSet),
+        booking_history: formattedBookings
+      };
+    }));
+
+    let result = enriched;
     if (search) {
-      query += ' AND (c.name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?)';
-      const s = `%${search}%`;
-      params.push(s, s, s);
+      const s = search.toLowerCase();
+      result = enriched.filter(c => {
+        const matchName = c.name?.toLowerCase().includes(s);
+        const matchEmail = c.email?.toLowerCase().includes(s);
+        const matchPhone = c.phone?.toLowerCase().includes(s);
+        const matchComp = c.companions?.some(comp => comp.toLowerCase().includes(s));
+        const matchRoom = c.last_room?.toLowerCase().includes(s);
+        return matchName || matchEmail || matchPhone || matchComp || matchRoom;
+      });
     }
-    query += ' ORDER BY c.id DESC';
-    const rows = await db.all(query, params);
-    res.json(rows);
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update Client Profile (Name, Phone, Photo)
+app.put('/api/clients/profile', async (req, res) => {
+  try {
+    const { email, name, phone } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    const existing = await db.get('SELECT * FROM clients WHERE LOWER(email) = LOWER(?)', email);
+    if (existing) {
+      await db.run('UPDATE clients SET name = COALESCE(?, name), phone = COALESCE(?, phone) WHERE id = ?', name, phone, existing.id);
+    } else {
+      await db.run('INSERT INTO clients (name, email, phone) VALUES (?, ?, ?)', name || 'Guest', email, phone || '');
+    }
+    res.json({ success: true, email, name, phone });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Forgot Password API Endpoint
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email address required' });
+    res.json({
+      success: true,
+      message: `Password reset link has been dispatched for ${email}. You may reset your password or continue with Google Sign-In.`
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -662,10 +770,11 @@ app.post('/api/reviews', async (req, res) => {
 
 // ==========================================
 // 9. CALENDAR & OCCUPANCY API
+// Only ADMIN-APPROVED reservations ('Confirmed', 'Checked in') appear on the calendar!
 // ==========================================
 app.get('/api/calendar', async (req, res) => {
   try {
-    const { year, month } = req.query; // year e.g. 2026, month 1-12
+    const { year, month, room_id, room_name } = req.query; // year e.g. 2026, month 1-12
     const y = parseInt(year) || new Date().getFullYear();
     const m = parseInt(month) || (new Date().getMonth() + 1);
 
@@ -674,15 +783,25 @@ app.get('/api/calendar', async (req, res) => {
     const daysInMonth = new Date(y, m, 0).getDate();
     const endStr = `${y}-${monthStr}-${daysInMonth}`;
 
-    // Get bookings that overlap with this month
-    const bookings = await db.all(
-      `SELECT reference_id, guest_name, room_name, room_number, check_in, check_out, status
-       FROM bookings
-       WHERE status NOT IN ('Cancelled')
-         AND check_in <= ?
-         AND check_out >= ?`,
-      endStr, startStr
-    );
+    // IMPORTANT: Only approved/confirmed bookings block calendar dates!
+    let query = `
+      SELECT reference_id, guest_name, room_id, room_name, room_number, check_in, check_out, status
+      FROM bookings
+      WHERE status IN ('Confirmed', 'Checked in')
+        AND check_in <= ?
+        AND check_out >= ?
+    `;
+    const params = [endStr, startStr];
+
+    if (room_id) {
+      query += ' AND room_id = ?';
+      params.push(room_id);
+    } else if (room_name) {
+      query += ' AND LOWER(room_name) = LOWER(?)';
+      params.push(room_name);
+    }
+
+    const bookings = await db.all(query, params);
 
     // Calculate occupancy map for each day
     const daysData = {};

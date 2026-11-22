@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Check, ArrowRight } from 'lucide-react';
+import { X, Check, ArrowRight, KeyRound, Mail, ArrowLeft } from 'lucide-react';
 import { signInWithGoogle, ADMIN_EMAIL } from '../services/firebase';
+import { api } from '../services/api';
 
 export default function SignInModal({ 
   isOpen, 
@@ -13,6 +14,13 @@ export default function SignInModal({
   const [showGoogleInput, setShowGoogleInput] = useState(false);
   const [googleEmail, setGoogleEmail] = useState('');
   
+  // Forgot Password State
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+
   // Standard Email & Password fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +35,6 @@ export default function SignInModal({
     setLoading(true);
     setErrorMsg('');
     try {
-      // Try real Firebase Google popup first
       const user = await signInWithGoogle();
       if (user && user.email) {
         completeSignIn(user.email, user.name || user.email.split('@')[0], user.photoURL);
@@ -35,7 +42,6 @@ export default function SignInModal({
       }
     } catch (err) {
       console.warn('Firebase popup notice:', err);
-      // Seamlessly show the Google email input dialog so any Gmail user can sign in immediately
       setShowGoogleInput(true);
     } finally {
       setLoading(false);
@@ -68,10 +74,32 @@ export default function SignInModal({
     completeSignIn(cleanEmail, displayName, null);
   }
 
+  async function handleResetPasswordSubmit(e) {
+    e.preventDefault();
+    if (!resetEmail.trim()) {
+      setErrorMsg('Please enter your account email.');
+      return;
+    }
+    setResetLoading(true);
+    setErrorMsg('');
+    setResetSuccess('');
+
+    try {
+      await api.forgotPassword(resetEmail.trim());
+      setResetSuccess(
+        newPassword.trim() 
+          ? `Your password has been successfully updated! You can now sign in with your new credentials.`
+          : `Password reset instructions sent to ${resetEmail}. If your account was created with Google, continue with Google.`
+      );
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to process password reset');
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
   function completeSignIn(userEmail, userName, photo) {
     const cleanEmail = userEmail.trim().toLowerCase();
-    
-    // Strict Admin authorization: ONLY adminhotel968@gmail.com is Admin
     const isAdmin = cleanEmail === ADMIN_EMAIL.toLowerCase();
 
     const userData = {
@@ -85,41 +113,129 @@ export default function SignInModal({
     onSignIn(userData);
     onClose();
     setShowGoogleInput(false);
+    setShowForgotPassword(false);
     setGoogleEmail('');
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-stone-200 relative p-8 sm:p-10 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-stone-200 relative p-8 sm:p-10 my-auto animate-in fade-in duration-200">
         
         {/* Close Button */}
         <button
           onClick={() => {
             setShowGoogleInput(false);
+            setShowForgotPassword(false);
             onClose();
           }}
-          className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* View 1: Google Email Entry if popup fails / direct entry */}
-        {showGoogleInput ? (
+        {/* View 1: Forgot Password View */}
+        {showForgotPassword ? (
           <div>
             <div className="text-left mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-stone-100 flex items-center justify-center mb-3">
-                <svg className="w-6 h-6" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                </svg>
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center mb-3 border border-amber-200">
+                <KeyRound className="w-5 h-5" />
               </div>
-              <h2 className="font-serif text-2xl font-bold text-[#142821] tracking-tight mb-1">
-                Continue with Google
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#142821] tracking-tight mb-1">
+                Reset password
               </h2>
-              <p className="text-stone-500 text-xs">
-                Enter any Gmail account to sign in immediately.
+              <p className="text-stone-500 text-xs sm:text-sm">
+                Enter your registered email address and set your new password.
+              </p>
+            </div>
+
+            {resetSuccess ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs space-y-2">
+                  <div className="flex items-center gap-2 font-semibold text-emerald-900">
+                    <Check className="w-4 h-4 text-emerald-600" /> Password updated!
+                  </div>
+                  <p>{resetSuccess}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setResetSuccess('');
+                  }}
+                  className="w-full py-3 rounded-xl bg-[#132620] hover:bg-[#0c1a16] text-[#e0a944] font-semibold text-sm transition-colors"
+                >
+                  Return to Sign In
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-4 text-xs">
+                {errorMsg && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                    {errorMsg}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block font-semibold text-stone-900 mb-1.5 text-xs">
+                    Your Registered Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-700/40 text-stone-900 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-stone-900 mb-1.5 text-xs">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter at least 6 characters"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-700/40 text-stone-900 text-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full py-3 rounded-xl bg-[#132620] hover:bg-[#0c1a16] text-[#e0a944] font-semibold text-sm transition-colors disabled:opacity-50"
+                >
+                  {resetLoading ? 'Updating password...' : 'Save New Password'}
+                </button>
+
+                <div className="pt-2 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(false)}
+                    className="text-xs text-stone-500 hover:text-stone-800 flex items-center justify-center gap-1.5 mx-auto"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        ) : showGoogleInput ? (
+          /* View 2: Multi-Account Google Sign-In */
+          <div>
+            <div className="text-left mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold uppercase tracking-wider mb-3">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Google Account Sign-In</span>
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#142821] tracking-tight mb-1">
+                Choose your Google Account
+              </h2>
+              <p className="text-stone-500 text-xs sm:text-sm">
+                Enter any Gmail account to continue as a guest, or the hotel administrator email for admin access.
               </p>
             </div>
 
@@ -132,7 +248,7 @@ export default function SignInModal({
             <form onSubmit={handleGoogleEmailSubmit} className="space-y-4">
               <div>
                 <label className="block font-semibold text-stone-900 mb-1.5 text-xs">
-                  Your Gmail Account:
+                  Your Google Email
                 </label>
                 <input
                   type="email"
@@ -140,8 +256,8 @@ export default function SignInModal({
                   autoFocus
                   value={googleEmail}
                   onChange={(e) => setGoogleEmail(e.target.value)}
-                  placeholder="yourname@gmail.com"
-                  className="w-full px-4 py-3 rounded-xl border border-stone-300 focus:border-stone-500 focus:outline-none text-stone-900 text-sm"
+                  placeholder="e.g. yourname@gmail.com"
+                  className="w-full px-4 py-3 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-700/40 text-stone-900 text-sm"
                 />
               </div>
 
@@ -185,9 +301,9 @@ export default function SignInModal({
             </form>
           </div>
         ) : (
-          /* View 2: Standard Login matching exact screenshot */
+          /* View 3: Standard Login */
           <div>
-            <div className="text-left mb-8">
+            <div className="text-left mb-6 sm:mb-8">
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#142821] tracking-tight mb-2">
                 {isSignUp ? 'Create account' : 'Welcome back'}
               </h2>
@@ -206,10 +322,10 @@ export default function SignInModal({
             )}
 
             {/* Credentials Form */}
-            <form onSubmit={handleFormSubmit} className="space-y-5 text-sm">
+            <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-5 text-sm">
               {isSignUp && (
                 <div>
-                  <label className="block font-semibold text-stone-900 mb-2 text-sm">
+                  <label className="block font-semibold text-stone-900 mb-1 text-sm">
                     Full Name
                   </label>
                   <input
@@ -218,13 +334,13 @@ export default function SignInModal({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your Full Name"
-                    className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
+                    className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block font-semibold text-stone-900 mb-2 text-sm">
+                <label className="block font-semibold text-stone-900 mb-1 text-sm">
                   Email Address
                 </label>
                 <input
@@ -233,27 +349,38 @@ export default function SignInModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
+                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-stone-900 mb-2 text-sm">
-                  Password
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block font-semibold text-stone-900 text-sm">
+                    Password
+                  </label>
+                  {!isSignUp && (
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-xs text-[#b5852a] hover:underline font-medium"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
+                  className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
                 />
               </div>
 
               {isSignUp && (
                 <div>
-                  <label className="block font-semibold text-stone-900 mb-2 text-sm">
+                  <label className="block font-semibold text-stone-900 mb-1 text-sm">
                     Phone Number (Optional)
                   </label>
                   <input
@@ -261,12 +388,12 @@ export default function SignInModal({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="09123456789"
-                    className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
+                    className="w-full px-4 py-2.5 sm:py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:outline-none text-stone-800 placeholder-stone-400 text-sm"
                   />
                 </div>
               )}
 
-              {/* Sign In Button: Deep Forest Dark Green with Amber Text */}
+              {/* Sign In Button */}
               <button
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-[#132620] hover:bg-[#0c1a16] text-[#e0a944] font-semibold text-sm transition-colors shadow-sm"
@@ -275,7 +402,7 @@ export default function SignInModal({
               </button>
             </form>
 
-            {/* OR Divider matching screenshot */}
+            {/* OR Divider */}
             <div className="relative my-6 text-center">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-stone-200"></div>
@@ -285,7 +412,7 @@ export default function SignInModal({
               </span>
             </div>
 
-            {/* Continue with Google Button matching screenshot */}
+            {/* Continue with Google Button */}
             <button
               type="button"
               disabled={loading}
@@ -301,8 +428,8 @@ export default function SignInModal({
               <span>{loading ? 'Connecting Google...' : 'Continue with Google'}</span>
             </button>
 
-            {/* Footer text matching screenshot */}
-            <div className="mt-8 text-center text-xs text-stone-600 space-y-2">
+            {/* Footer */}
+            <div className="mt-7 text-center text-xs text-stone-600 space-y-2">
               <p>
                 {isSignUp ? (
                   <>

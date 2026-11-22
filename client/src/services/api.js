@@ -56,8 +56,17 @@ export const api = {
   deleteKey: (id) => request(`/keys/${id}`, { method: 'DELETE' }),
 
   // Dining & Beverages
-  getFoodItems: (category) => request(`/food-items${category ? `?category=${encodeURIComponent(category)}` : ''}`),
+  getFoodItems: (category, onlyAvailable = false) => {
+    const params = new URLSearchParams();
+    if (category && category !== 'All') params.append('category', category);
+    if (onlyAvailable) params.append('only_available', 'true');
+    const q = params.toString();
+    return request(`/food-items${q ? `?${q}` : ''}`);
+  },
   createFoodItem: (data) => request('/food-items', { method: 'POST', body: JSON.stringify(data) }),
+  updateFoodItem: (id, data) => request(`/food-items/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  toggleFoodItem: (id) => request(`/food-items/${id}/toggle`, { method: 'PUT' }),
+  deleteFoodItem: (id) => request(`/food-items/${id}`, { method: 'DELETE' }),
   getFoodOrders: () => request('/food-orders'),
   createFoodOrder: (data) => request('/food-orders', { method: 'POST', body: JSON.stringify(data) }),
   updateFoodOrderStatus: (id, status) => request(`/food-orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
@@ -74,13 +83,22 @@ export const api = {
 
   // Clients
   getClients: (search) => request(`/clients${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  updateProfile: (data) => request('/clients/profile', { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Auth & Account
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
 
   // Reviews
   getReviews: () => request('/reviews'),
   createReview: (data) => request('/reviews', { method: 'POST', body: JSON.stringify(data) }),
 
-  // Calendar
-  getCalendar: (year, month) => request(`/calendar?year=${year}&month=${month}`),
+  // Calendar (Optionally filter by room, returns ONLY admin-confirmed bookings)
+  getCalendar: (year, month, roomId = null, roomName = null) => {
+    let url = `/calendar?year=${year}&month=${month}`;
+    if (roomId) url += `&room_id=${roomId}`;
+    if (roomName) url += `&room_name=${encodeURIComponent(roomName)}`;
+    return request(url);
+  },
 
   // Dashboard Stats
   getDashboardStats: () => request('/dashboard/stats')

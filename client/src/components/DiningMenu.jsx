@@ -145,47 +145,72 @@ export default function DiningMenu({ currentUser }) {
         <div className="py-20 text-center text-stone-500 text-sm">Loading bistro menu...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="bg-[#1f3b31] text-white rounded-3xl overflow-hidden border border-emerald-800 shadow-lg flex flex-col justify-between"
-            >
-              {/* Image & Badges */}
-              <div className="relative h-56 w-full overflow-hidden bg-stone-900">
-                <img
-                  src={item.image_url}
-                  alt={item.name}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold bg-black/50 backdrop-blur-md text-emerald-100 border border-white/20">
-                  {item.category}
-                </span>
-                <span className="absolute top-3 right-3 px-3.5 py-1 rounded-full text-xs font-bold bg-[#e2a63b] text-[#142821] shadow">
-                  ₱{item.price} {item.price_unit}
-                </span>
-              </div>
-
-              {/* Body */}
-              <div className="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mb-2">
-                    {item.name}
-                  </h3>
-                  <p className="text-emerald-100/80 text-xs sm:text-sm line-clamp-3 mb-6 leading-relaxed">
-                    {item.description}
-                  </p>
+          {items.map((item) => {
+            const isOutOfStock = item.is_available === 0 || item.is_available === false;
+            return (
+              <div
+                key={item.id}
+                className={`bg-[#1f3b31] text-white rounded-3xl overflow-hidden border border-emerald-800 shadow-lg flex flex-col justify-between transition-all ${
+                  isOutOfStock ? 'opacity-85' : ''
+                }`}
+              >
+                {/* Image & Badges */}
+                <div className="relative h-56 w-full overflow-hidden bg-stone-900">
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className={`w-full h-full object-cover transition-transform duration-500 ${
+                      isOutOfStock ? 'grayscale-40' : 'hover:scale-105'
+                    }`}
+                  />
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold bg-black/50 backdrop-blur-md text-emerald-100 border border-white/20">
+                    {item.category}
+                  </span>
+                  
+                  {isOutOfStock ? (
+                    <span className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold bg-rose-600 text-white shadow-md flex items-center gap-1">
+                      Out of Stock
+                    </span>
+                  ) : (
+                    <span className="absolute top-3 right-3 px-3.5 py-1 rounded-full text-xs font-bold bg-[#e2a63b] text-[#142821] shadow">
+                      ₱{item.price} {item.price_unit}
+                    </span>
+                  )}
                 </div>
 
-                <button
-                  onClick={() => addToCart(item)}
-                  className="w-full py-2.5 rounded-full bg-[#e2a63b] hover:bg-[#d4962c] text-[#142821] text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add to order</span>
-                </button>
+                {/* Body */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">
+                        {item.name}
+                      </h3>
+                    </div>
+                    <p className="text-emerald-100/80 text-xs sm:text-sm line-clamp-3 mb-6 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {isOutOfStock ? (
+                    <button
+                      disabled
+                      className="w-full py-2.5 rounded-full bg-stone-700/80 text-stone-300 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed border border-stone-600"
+                    >
+                      <span>Unavailable / Out of Stock</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => addToCart(item)}
+                      className="w-full py-2.5 rounded-full bg-[#e2a63b] hover:bg-[#d4962c] text-[#142821] text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add to order</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

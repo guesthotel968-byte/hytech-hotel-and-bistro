@@ -9,6 +9,7 @@ import ContactSection from './components/ContactSection';
 import ReservationModal from './components/ReservationModal';
 import ReservationReceiptModal from './components/ReservationReceiptModal';
 import MyBookingsModal from './components/MyBookingsModal';
+import ProfileModal from './components/ProfileModal';
 import SignInModal from './components/SignInModal';
 import AdminLayout from './components/admin/AdminLayout';
 import { ADMIN_EMAIL, signOutUser, auth } from './services/firebase';
@@ -33,6 +34,7 @@ export default function App() {
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
   const [activeReceipt, setActiveReceipt] = useState(null);
   const [isMyBookingsOpen, setIsMyBookingsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   // Sign In Modal states
   const [isSignInOpen, setIsSignInOpen] = useState(false);
@@ -127,6 +129,13 @@ export default function App() {
                 setIsMyBookingsOpen(true);
               }
             }}
+            onOpenProfile={() => {
+              if (!currentUser) {
+                handleRequireSignIn('general');
+              } else {
+                setIsProfileOpen(true);
+              }
+            }}
             onSignOut={handleSignOut}
           />
 
@@ -172,6 +181,22 @@ export default function App() {
         onClose={() => setIsMyBookingsOpen(false)}
         currentUser={currentUser}
         onViewReceipt={(booking) => setActiveReceipt(booking)}
+        onOpenBooking={() => handleOpenBooking()}
+        onOpenDining={() => {
+          const el = document.getElementById('food-and-drink');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
+
+      {/* Guest Profile & Avatar Modal (Requirement 9) */}
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        currentUser={currentUser}
+        onUpdateUser={(updated) => {
+          setCurrentUser(updated);
+          localStorage.setItem('hytech_user', JSON.stringify(updated));
+        }}
       />
 
       {/* Google Sign In Modal */}

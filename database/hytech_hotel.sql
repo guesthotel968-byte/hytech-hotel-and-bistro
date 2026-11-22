@@ -161,6 +161,7 @@ CREATE TABLE `bookings` (
   `room_charges` DECIMAL(10,2) NOT NULL,
   `discount_code` VARCHAR(100) DEFAULT NULL,
   `discount_amount` DECIMAL(10,2) DEFAULT 0.00,
+  `companions_json` LONGTEXT,
   `extras_json` LONGTEXT,
   `extras_amount` DECIMAL(10,2) DEFAULT 0.00,
   `total_amount` DECIMAL(10,2) NOT NULL,

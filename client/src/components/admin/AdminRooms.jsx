@@ -48,6 +48,19 @@ export default function AdminRooms() {
     setImageUrl(r.image_url || '');
   }
 
+  async function handleDeleteRoom(roomId, roomName) {
+    if (!window.confirm(`Are you sure you want to delete ${roomName}? This will remove it from the available accommodations list.`)) {
+      return;
+    }
+    try {
+      await api.deleteRoom(roomId);
+      fetchRooms();
+      setEditingRoom(null);
+    } catch (err) {
+      alert('Failed to delete room: ' + err.message);
+    }
+  }
+
   async function handleSaveRoom(e) {
     e.preventDefault();
     const payload = {
@@ -57,9 +70,9 @@ export default function AdminRooms() {
       capacity: Number(capacity),
       inventory: Number(inventory),
       bed_type: bedType,
-      description,
-      amenities,
-      image_url: imageUrl
+      description: description || 'Clean and comfortable accommodations in Bongabong, Oriental Mindoro.',
+      amenities: amenities || 'Air Conditioning, Free Wi-Fi, Private Bathroom, Hot Shower',
+      image_url: imageUrl || 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'
     };
 
     try {
@@ -283,6 +296,15 @@ export default function AdminRooms() {
               </div>
 
               <div className="pt-3 border-t border-stone-200 flex gap-2">
+                {editingRoom && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteRoom(editingRoom.id, editingRoom.name)}
+                    className="px-3 py-2.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold"
+                  >
+                    Delete Room
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => { setEditingRoom(null); setIsAddModalOpen(false); }}
@@ -294,7 +316,7 @@ export default function AdminRooms() {
                   type="submit"
                   className="flex-1 py-2.5 rounded-full bg-[#183429] text-white font-semibold"
                 >
-                  Save Changes
+                  {editingRoom ? 'Save Changes' : 'Create Room'}
                 </button>
               </div>
             </form>

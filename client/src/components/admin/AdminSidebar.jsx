@@ -10,7 +10,6 @@ import {
   UtensilsCrossed, 
   Sparkles,
   ArrowLeft,
-  Menu,
   X
 } from 'lucide-react';
 
@@ -19,12 +18,13 @@ export default function AdminSidebar({
   setCurrentTab, 
   onBackToWebsite,
   isMobileOpen,
-  setIsMobileOpen
+  setIsMobileOpen,
+  pendingBookingsCount = 0
 }) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
-    { id: 'bookings', label: 'Bookings', icon: FileText },
+    { id: 'bookings', label: 'Bookings', icon: FileText, badge: pendingBookingsCount },
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'rooms', label: 'Rooms', icon: Bed },
     { id: 'keys', label: 'Key Management', icon: KeyRound },
@@ -35,7 +35,6 @@ export default function AdminSidebar({
 
   return (
     <>
-      
       {isMobileOpen && (
         <div 
           onClick={() => setIsMobileOpen(false)}
@@ -43,7 +42,6 @@ export default function AdminSidebar({
         />
       )}
 
-   
       <aside className={`
         fixed lg:static top-0 left-0 bottom-0 z-40
         w-64 bg-[#1f3f33] text-white flex flex-col justify-between
@@ -51,7 +49,6 @@ export default function AdminSidebar({
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         border-r border-emerald-900/60 shadow-xl lg:shadow-none
       `}>
-        
         <div>
           <div className="p-6 border-b border-emerald-800/60 flex items-center justify-between">
             <div>
@@ -70,11 +67,12 @@ export default function AdminSidebar({
             </button>
           </div>
 
-          
           <nav className="p-3 space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentTab === item.id;
+              const hasBadge = item.badge && item.badge > 0;
+
               return (
                 <button
                   key={item.id}
@@ -83,28 +81,38 @@ export default function AdminSidebar({
                     setIsMobileOpen(false);
                   }}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium transition-all
+                    w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium transition-all
                     ${isActive 
                       ? 'bg-[#e2ebe3] text-[#142921] font-bold shadow-sm' 
                       : 'text-emerald-100/90 hover:bg-white/10 hover:text-white'
                     }
                   `}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#142921]' : 'text-emerald-300'}`} />
-                  <span>{item.label}</span>
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#142921]' : 'text-emerald-300'}`} />
+                    <span>{item.label}</span>
+                  </div>
+
+                  {/* Red Notification Badge (Requirement 2) */}
+                  {hasBadge && (
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500 text-white animate-pulse shadow-xs">
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
           </nav>
         </div>
 
+        {/* Back to Guest Website Button */}
         <div className="p-4 border-t border-emerald-800/60">
           <button
             onClick={onBackToWebsite}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 text-xs font-semibold border border-emerald-700/60 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-emerald-100 font-semibold transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>View Guest Website</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span>Return to Guest Website</span>
           </button>
         </div>
       </aside>

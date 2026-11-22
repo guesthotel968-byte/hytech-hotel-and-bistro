@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, RefreshCw, Star, Calendar, Utensils, CheckCircle, FileText } from 'lucide-react';
+import { X, RefreshCw, Star, Calendar, Utensils, CheckCircle, FileText, PlusCircle, Sparkles, Bed, ShoppingBag, Coffee } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function MyBookingsModal({ 
   isOpen, 
   onClose, 
   currentUser, 
-  onViewReceipt 
+  onViewReceipt,
+  onOpenBooking,
+  onOpenDining
 }) {
-  const [activeTab, setActiveTab] = useState('reservations'); // 'reservations' or 'reviews'
+  const [activeTab, setActiveTab] = useState('history'); // 'history' or 'reviews'
+  const [categoryFilter, setCategoryFilter] = useState('all'); // 'all', 'rooms', 'food', 'extras'
   const [bookings, setBookings] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -41,6 +44,22 @@ export default function MyBookingsModal({
     }
   }
 
+  // Extract all extras booked across all reservations
+  const allBookedExtras = [];
+  bookings.forEach(b => {
+    const list = Array.isArray(b.extras) ? b.extras : [];
+    list.forEach(ex => {
+      allBookedExtras.push({
+        ...ex,
+        booking_reference: b.reference_id,
+        booking_status: b.status,
+        room_name: b.room_name,
+        check_in: b.check_in,
+        check_out: b.check_out
+      });
+    });
+  });
+
   async function handleSubmitReview(b) {
     if (!reviewComment.trim()) {
       alert('Please write a brief comment about your experience.');
@@ -69,47 +88,83 @@ export default function MyBookingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-[#fcfbf7] rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-stone-200 my-auto animate-in fade-in duration-200">
+      <div className="bg-[#fcfbf7] rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-stone-200 my-auto animate-in fade-in duration-200 flex flex-col max-h-[90vh]">
         
-        {/* Header matching screenshot */}
-        <div className="p-6 border-b border-stone-200 text-center relative">
+        {/* Header */}
+        <div className="p-6 border-b border-stone-200 text-center relative shrink-0 bg-white">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-stone-200 text-stone-500"
+            className="absolute top-5 right-5 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold">
-            Your Hotel Experience
+          <span className="text-[11px] uppercase tracking-widest text-emerald-800 font-semibold block mb-0.5">
+            Hytech Hotel & Bistro
           </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#142821] mt-0.5">
-            My bookings
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#142821]">
+            Booking History & Orders
           </h2>
-          <p className="text-xs text-stone-600 mt-1">
-            Reservations and food orders for <span className="font-mono text-emerald-950 font-medium">{email}</span>
+          <p className="text-xs text-stone-500 mt-1">
+            Registered for <span className="font-mono text-emerald-950 font-semibold">{email}</span>
           </p>
 
-          <button
-            onClick={loadData}
-            disabled={loading}
-            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-stone-300 text-xs font-medium hover:bg-stone-100 text-stone-700"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh bookings</span>
-          </button>
-
-          {/* Tabs */}
-          <div className="grid grid-cols-2 gap-2 mt-5 p-1 bg-stone-200/70 rounded-2xl">
+          <div className="flex items-center justify-center gap-3 mt-3">
             <button
-              onClick={() => setActiveTab('reservations')}
+              onClick={loadData}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-stone-300 text-xs font-medium hover:bg-stone-100 text-stone-700"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>Refresh data</span>
+            </button>
+          </div>
+
+          {/* Quick Action Buttons to add more */}
+          <div className="mt-4 p-3 bg-emerald-900/5 rounded-2xl border border-emerald-900/10 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-emerald-950 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              Need to add more to your stay?
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onOpenBooking) onOpenBooking();
+                }}
+                className="px-3 py-1.5 rounded-full bg-[#183429] hover:bg-[#12281f] text-white text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors"
+              >
+                <Bed className="w-3.5 h-3.5" />
+                <span>+ Book Room</span>
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onOpenDining) onOpenDining();
+                  else {
+                    const el = document.getElementById('food-and-drink');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="px-3 py-1.5 rounded-full bg-[#e2a63b] hover:bg-[#d4972f] text-[#142821] text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors"
+              >
+                <Utensils className="w-3.5 h-3.5" />
+                <span>+ Order Food</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Top Level Tabs */}
+          <div className="grid grid-cols-2 gap-2 mt-4 p-1 bg-stone-200/80 rounded-2xl">
+            <button
+              onClick={() => setActiveTab('history')}
               className={`py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-                activeTab === 'reservations'
+                activeTab === 'history'
                   ? 'bg-white text-stone-900 shadow-sm'
                   : 'text-stone-600 hover:text-stone-900'
               }`}
             >
-              Reservations & orders
+              Reservations & Orders
             </button>
             <button
               onClick={() => setActiveTab('reviews')}
@@ -119,194 +174,290 @@ export default function MyBookingsModal({
                   : 'text-stone-600 hover:text-stone-900'
               }`}
             >
-              Stars & reviews
+              Stars & Reviews
             </button>
           </div>
         </div>
 
         {/* Tab 1: Reservations & Orders */}
-        {activeTab === 'reservations' && (
-          <div className="p-6 max-h-[60vh] overflow-y-auto space-y-5">
-            <h3 className="font-serif text-lg font-bold text-stone-900">Room reservations</h3>
-            {bookings.length === 0 ? (
-              <div className="p-8 text-center text-xs text-stone-500 bg-white rounded-2xl border border-stone-200">
-                No room reservations found under this email.
-              </div>
-            ) : (
-              bookings.map((b) => (
-                <div key={b.id} className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
-                  <div className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-xs font-bold text-[#142821]">{b.reference_id}</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          b.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-800' :
-                          b.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
-                          b.status === 'Checked out' ? 'bg-blue-100 text-blue-800' :
-                          'bg-stone-100 text-stone-700'
-                        }`}>
-                          {b.status}
-                        </span>
-                      </div>
-                      <h4 className="font-serif font-bold text-base text-stone-900">{b.room_name}</h4>
-                      <p className="text-xs text-stone-500">
-                        {b.check_in} → {b.check_out} • {b.nights} night{b.nights > 1 ? 's' : ''}
-                      </p>
-                      <p className="text-xs font-semibold text-emerald-900 mt-1">
-                        ₱{Number(b.total_amount).toLocaleString()} ({b.payment_method} • {b.payment_status})
-                      </p>
-                    </div>
+        {activeTab === 'history' && (
+          <div className="p-6 overflow-y-auto space-y-5 flex-1">
+            
+            {/* Category Filter Pills (Requirement 1) */}
+            <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-stone-200">
+              <span className="text-xs font-semibold text-stone-500 mr-1">Filter by:</span>
+              {[
+                { id: 'all', label: 'All Items', count: bookings.length + orders.length },
+                { id: 'rooms', label: 'Room Reservations', count: bookings.length },
+                { id: 'food', label: 'Food Orders', count: orders.length },
+                { id: 'extras', label: 'Extras / Add-ons', count: allBookedExtras.length }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setCategoryFilter(f.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    categoryFilter === f.id
+                      ? 'bg-[#183429] text-white shadow-sm'
+                      : 'bg-white border border-stone-300 text-stone-700 hover:bg-stone-100'
+                  }`}
+                >
+                  {f.label} ({f.count})
+                </button>
+              ))}
+            </div>
 
-                    <button
-                      onClick={() => onViewReceipt(b)}
-                      className="px-4 py-2 rounded-full border border-stone-300 hover:bg-stone-50 text-xs font-semibold text-stone-800 flex items-center gap-1.5"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-stone-500" />
-                      <span>View Receipt</span>
-                    </button>
-                  </div>
+            {/* 1. ROOM RESERVATIONS */}
+            {(categoryFilter === 'all' || categoryFilter === 'rooms') && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif text-lg font-bold text-stone-900 flex items-center gap-2">
+                    <Bed className="w-4 h-4 text-emerald-800" />
+                    <span>Room Reservations</span>
+                  </h3>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      if (onOpenBooking) onOpenBooking();
+                    }}
+                    className="text-xs font-semibold text-emerald-800 hover:underline flex items-center gap-1"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" /> Book another
+                  </button>
                 </div>
-              ))
+
+                {bookings.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-stone-500 bg-white rounded-2xl border border-stone-200">
+                    No room reservations under this email yet.
+                  </div>
+                ) : (
+                  bookings.map((b) => (
+                    <div key={b.id} className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-xs hover:shadow-sm transition-shadow">
+                      <div className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-mono text-xs font-bold text-[#142821]">{b.reference_id}</span>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              b.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-800' :
+                              b.status === 'Pending' ? 'bg-amber-100 text-amber-800' :
+                              b.status === 'Checked in' ? 'bg-blue-100 text-blue-800' :
+                              b.status === 'Checked out' ? 'bg-purple-100 text-purple-800' :
+                              'bg-stone-100 text-stone-700'
+                            }`}>
+                              {b.status}
+                            </span>
+                          </div>
+                          <h4 className="font-serif font-bold text-base text-stone-900">{b.room_name}</h4>
+                          <p className="text-xs text-stone-500">
+                            {b.check_in} → {b.check_out} • {b.nights} night{b.nights > 1 ? 's' : ''} • {b.guest_count} guest{b.guest_count > 1 ? 's' : ''}
+                          </p>
+                          {b.companions && b.companions.length > 0 && (
+                            <p className="text-[11px] text-stone-600 mt-1">
+                              Companions: <span className="font-medium text-stone-800">{b.companions.join(', ')}</span>
+                            </p>
+                          )}
+                          <p className="text-xs font-semibold text-emerald-900 mt-1">
+                            ₱{Number(b.total_amount).toLocaleString()} ({b.payment_method} • {b.payment_status})
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => onViewReceipt(b)}
+                            className="px-4 py-2 rounded-full border border-stone-300 hover:bg-stone-50 text-xs font-semibold text-stone-800 flex items-center gap-1.5 transition-colors"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-stone-500" />
+                            <span>View Receipt</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
 
-            {/* Bistro Orders */}
-            {orders.length > 0 && (
-              <div className="pt-4 border-t border-stone-200">
-                <h3 className="font-serif text-lg font-bold text-stone-900 mb-3">Food & Bistro orders</h3>
-                <div className="space-y-3">
-                  {orders.map((o) => (
-                    <div key={o.id} className="p-4 bg-white rounded-2xl border border-stone-200 text-xs flex justify-between items-center">
+            {/* 2. FOOD & BISTRO ORDERS */}
+            {(categoryFilter === 'all' || categoryFilter === 'food') && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif text-lg font-bold text-stone-900 flex items-center gap-2">
+                    <Utensils className="w-4 h-4 text-amber-700" />
+                    <span>Food & Bistro Orders</span>
+                  </h3>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      if (onOpenDining) onOpenDining();
+                      else {
+                        const el = document.getElementById('food-and-drink');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="text-xs font-semibold text-emerald-800 hover:underline flex items-center gap-1"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" /> Order more food
+                  </button>
+                </div>
+
+                {orders.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-stone-500 bg-white rounded-2xl border border-stone-200">
+                    No food orders recorded yet.
+                  </div>
+                ) : (
+                  orders.map((o) => (
+                    <div key={o.id} className="p-4 bg-white rounded-2xl border border-stone-200/90 text-xs flex justify-between items-center shadow-xs">
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-emerald-900">{o.order_id}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold">{o.status}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            o.status === 'Served' || o.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                            o.status === 'Preparing' ? 'bg-amber-100 text-amber-800' :
+                            'bg-stone-100 text-stone-700'
+                          }`}>
+                            {o.status}
+                          </span>
                         </div>
-                        <p className="text-stone-700 mt-1">
+                        <p className="text-stone-800 font-medium mt-1">
                           {o.items?.map(i => `${i.name} (x${i.quantity})`).join(', ')}
                         </p>
-                        <p className="text-stone-400 text-[11px]">Deliver to: {o.deliver_to}</p>
+                        <p className="text-stone-500 text-[11px] mt-0.5">
+                          Deliver to: <span className="font-semibold text-stone-700">{o.deliver_to}</span>
+                          {o.special_request && ` • Note: ${o.special_request}`}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <span className="font-bold text-stone-900 text-sm">₱{o.total_amount}</span>
+                        <span className="font-bold text-stone-900 text-sm">₱{Number(o.total_amount).toLocaleString()}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
               </div>
             )}
+
+            {/* 3. EXTRAS & ADD-ONS */}
+            {(categoryFilter === 'all' || categoryFilter === 'extras') && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif text-lg font-bold text-stone-900 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-700" />
+                    <span>Extras & Service Add-ons</span>
+                  </h3>
+                </div>
+
+                {allBookedExtras.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-stone-500 bg-white rounded-2xl border border-stone-200">
+                    No extra services (massage, port shuttle, extra bed) added to your reservations yet.
+                  </div>
+                ) : (
+                  allBookedExtras.map((ex, idx) => (
+                    <div key={idx} className="p-4 bg-white rounded-2xl border border-stone-200/90 text-xs flex justify-between items-center shadow-xs">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-stone-900 text-sm">{ex.name}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold">
+                            Included in Stay
+                          </span>
+                        </div>
+                        <p className="text-stone-500 text-[11px] mt-1">
+                          Reservation: <span className="font-mono font-medium text-stone-800">{ex.booking_reference}</span> ({ex.room_name})
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-emerald-950 text-sm">₱{Number(ex.price).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
           </div>
         )}
 
-        {/* Tab 2: Stars & Reviews matching screenshot */}
+        {/* Tab 2: Stars & Reviews */}
         {activeTab === 'reviews' && (
-          <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
-            <div className="text-center mb-2">
-              <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold">
-                Your Opinion Matters
-              </span>
-              <h3 className="font-serif text-xl font-bold text-[#142821] mt-0.5">
-                Review your stay
-              </h3>
-              <p className="text-xs text-stone-500 mt-1">
-                Choose 1–5 stars and leave a comment after checking out of a confirmed stay.
-              </p>
-            </div>
-
+          <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
             {reviewSuccess && (
-              <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-800 text-xs text-center border border-emerald-200">
-                {reviewSuccess}
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                <span>{reviewSuccess}</span>
               </div>
             )}
 
-            {bookings.length === 0 ? (
-              <div className="p-6 text-center text-xs text-stone-500 bg-white rounded-2xl border border-stone-200">
-                No past reservations found to review.
+            <div className="bg-white rounded-2xl border border-stone-200 p-5 space-y-4">
+              <h4 className="font-serif font-bold text-base text-stone-900">
+                Share your experience at Hytech Hotel & Bistro
+              </h4>
+              <p className="text-stone-600">
+                Choose a completed reservation to submit a verified guest review.
+              </p>
+
+              <div>
+                <label className="block font-semibold text-stone-800 mb-1">Select Reservation</label>
+                <select
+                  value={selectedBookingForReview?.id || ''}
+                  onChange={(e) => {
+                    const sel = bookings.find(b => b.id === Number(e.target.value));
+                    setSelectedBookingForReview(sel || null);
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-stone-900"
+                >
+                  <option value="">-- Choose your reservation --</option>
+                  {bookings.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.reference_id} - {b.room_name} ({b.check_in})
+                    </option>
+                  ))}
+                </select>
               </div>
-            ) : (
-              bookings.map((b) => (
-                <div key={b.id} className="p-5 bg-white rounded-2xl border border-stone-200 text-xs space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-stone-800">{b.reference_id}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
-                      b.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-800' :
-                      b.status === 'Pending' ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-700'
-                    }`}>
-                      {b.status}
-                    </span>
+
+              {selectedBookingForReview && (
+                <div className="space-y-4 pt-2 border-t border-stone-100">
+                  <div>
+                    <label className="block font-semibold text-stone-800 mb-1.5">Rating</label>
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          className="p-1 hover:scale-110 transition-transform"
+                        >
+                          <Star
+                            className={`w-6 h-6 ${
+                              star <= reviewRating
+                                ? 'fill-amber-400 text-amber-400'
+                                : 'text-stone-300'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="text-center py-2">
-                    <h4 className="font-serif font-bold text-base text-stone-900">{b.room_name}</h4>
-                    <p className="text-stone-500 text-[11px]">{b.check_in} to {b.check_out}</p>
+                  <div>
+                    <label className="block font-semibold text-stone-800 mb-1">Your Feedback</label>
+                    <textarea
+                      rows={3}
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Tell us what you enjoyed about the room, bistro food, and hotel staff..."
+                      className="w-full p-3 rounded-xl border border-stone-300 bg-stone-50 text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-700/40"
+                    />
                   </div>
 
-                  {b.status === 'Pending' ? (
-                    <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 text-center text-stone-500 space-y-2">
-                      <div className="flex justify-center text-stone-300 gap-1">
-                        {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-5 h-5" />)}
-                      </div>
-                      <p className="text-[11px] italic">
-                        The hotel must confirm this booking before it can be reviewed.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="pt-2 border-t border-stone-100 space-y-3">
-                      <div className="flex justify-center gap-1.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => {
-                              setSelectedBookingForReview(b.id);
-                              setReviewRating(star);
-                            }}
-                            className="p-1 focus:outline-none"
-                          >
-                            <Star
-                              className={`w-6 h-6 ${
-                                star <= reviewRating && selectedBookingForReview === b.id
-                                  ? 'fill-amber-400 text-amber-400'
-                                  : 'text-stone-300'
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-
-                      <textarea
-                        rows={2}
-                        value={selectedBookingForReview === b.id ? reviewComment : ''}
-                        onChange={(e) => {
-                          setSelectedBookingForReview(b.id);
-                          setReviewComment(e.target.value);
-                        }}
-                        placeholder="Write your review here (e.g. Clean room, delicious breakfast!)..."
-                        className="w-full p-2.5 rounded-xl border border-stone-300 bg-stone-50 text-xs"
-                      />
-
-                      <button
-                        onClick={() => handleSubmitReview(b)}
-                        disabled={reviewSubmitting}
-                        className="w-full py-2 rounded-full bg-[#183429] hover:bg-[#12281f] text-white text-xs font-semibold shadow"
-                      >
-                        {reviewSubmitting ? 'Posting Review...' : 'Submit Review'}
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => handleSubmitReview(selectedBookingForReview)}
+                    disabled={reviewSubmitting}
+                    className="w-full py-2.5 rounded-full bg-[#183429] hover:bg-[#12281f] text-white font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {reviewSubmitting ? 'Submitting Review...' : 'Post Verified Review'}
+                  </button>
                 </div>
-              ))
-            )}
+              )}
+            </div>
           </div>
         )}
-
-        <div className="p-4 border-t border-stone-200 bg-stone-50 text-center">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-800 text-xs font-semibold"
-          >
-            Close
-          </button>
-        </div>
 
       </div>
     </div>

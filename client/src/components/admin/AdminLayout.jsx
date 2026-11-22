@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Menu, ShieldAlert, ArrowLeft, LogIn } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, ShieldAlert, ArrowLeft, LogIn, Bell } from 'lucide-react';
 import { ADMIN_EMAIL, isUserAdmin } from '../../services/firebase';
+import { api } from '../../services/api';
 import AdminSidebar from './AdminSidebar';
 import AdminDashboard from './AdminDashboard';
 import AdminCalendar from './AdminCalendar';
@@ -15,6 +16,24 @@ import AdminExtras from './AdminExtras';
 export default function AdminLayout({ currentUser, onBackToWebsite, onRequireSignIn, onViewReceipt }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
+
+  useEffect(() => {
+    loadPendingCount();
+    const interval = setInterval(loadPendingCount, 15000); // refresh every 15s
+    return () => clearInterval(interval);
+  }, []);
+
+  async function loadPendingCount() {
+    try {
+      const stats = await api.getDashboardStats();
+      if (stats && stats.pendingBookings !== undefined) {
+        setPendingBookingsCount(stats.pendingBookings);
+      }
+    } catch (e) {
+      console.warn('Failed to load pending bookings count:', e);
+    }
+  }
 
  
   if (!currentUser || !isUserAdmin(currentUser)) {
@@ -65,6 +84,7 @@ export default function AdminLayout({ currentUser, onBackToWebsite, onRequireSig
         onBackToWebsite={onBackToWebsite}
         isMobileOpen={isMobileOpen}
         setIsMobileOpen={setIsMobileOpen}
+        pendingBookingsCount={pendingBookingsCount}
       />
 
      
@@ -74,18 +94,28 @@ export default function AdminLayout({ currentUser, onBackToWebsite, onRequireSig
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileOpen(true)}
-              className="p-1 rounded-lg hover:bg-white/10 text-emerald-200"
+              className="p-1 rounded-lg hover:bg-white/10 text-emerald-200 relative"
             >
               <Menu className="w-6 h-6" />
+              {pendingBookingsCount > 0 && (
+                <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-[#1f3f33]"></span>
+              )}
             </button>
             <span className="font-serif font-bold text-base">Hytech Admin</span>
           </div>
-          <button
-            onClick={onBackToWebsite}
-            className="text-xs text-amber-300 font-semibold underline"
-          >
-            Guest View
-          </button>
+          <div className="flex items-center gap-3">
+            {pendingBookingsCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white animate-pulse">
+                {pendingBookingsCount} pending
+              </span>
+            )}
+            <button
+              onClick={onBackToWebsite}
+              className="text-xs text-amber-300 font-semibold underline"
+            >
+              Guest View
+            </button>
+          </div>
         </div>
 
         
